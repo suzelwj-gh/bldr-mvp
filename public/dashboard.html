@@ -71,6 +71,27 @@
       background: #f97316;
       color: #fff;
     }
+
+    .daily-log-btn {
+      display: block;
+      width: 100%;
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+      background: #f97316;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.0625rem;
+      font-weight: 600;
+      text-decoration: none;
+      text-align: center;
+      transition: background 0.2s;
+    }
+
+    .daily-log-btn:hover {
+      background: #ea580c;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -78,6 +99,7 @@
     <div class="logo">BLDR</div>
     <h1>Welcome to BLDR</h1>
     <p class="welcome">Signed in as <strong id="userName">—</strong></p>
+    <a href="/record.html" class="daily-log-btn">Start Daily Log</a>
     <button id="logoutBtn">Log out</button>
   </div>
 
