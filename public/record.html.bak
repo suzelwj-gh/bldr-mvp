@@ -1,340 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>BLDR — Daily Log</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>BLDR — Record</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;500;600;700;900&family=Barlow+Condensed:wght@600;700;900&display=swap" rel="stylesheet" />
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    :root {
+      --bg:#0a0c0f;--surface:#111418;--border:#1e2329;--accent:#f5a623;--accent2:#e8380d;--text:#e8eaed;--muted:#6b7280;--warn:#f59e0b;--danger:#ef4444;--mono:'Share Tech Mono',monospace;--sans:'Barlow',sans-serif;--cond:'Barlow Condensed',sans-serif;
     }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #1a1a1a;
-      color: #f5f5f5;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid #333;
-    }
-
-    .logo {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #f97316;
-      letter-spacing: 0.05em;
-    }
-
-    .back-link {
-      color: #f97316;
-      text-decoration: none;
-      font-size: 1rem;
-      font-weight: 500;
-      padding: 0.5rem;
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-    }
-
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem 1.25rem;
-      max-width: 480px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    .record-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      padding: 2rem 0;
-    }
-
-    .talk-btn {
-      width: 160px;
-      height: 160px;
-      border-radius: 50%;
-      background: #f97316;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
-      box-shadow: 0 8px 32px rgba(249, 115, 22, 0.35);
-      touch-action: none;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-
-    .talk-btn:active,
-    .talk-btn.recording {
-      transform: scale(1.08);
-      background: #ea580c;
-      box-shadow: 0 8px 40px rgba(249, 115, 22, 0.55);
-    }
-
-    .talk-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .talk-btn svg {
-      width: 56px;
-      height: 56px;
-      fill: #fff;
-    }
-
-    .talk-label {
-      margin-top: 1.25rem;
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #ccc;
-    }
-
-    .status {
-      margin-top: 1.5rem;
-      font-size: 1rem;
-      color: #888;
-      min-height: 1.5rem;
-      text-align: center;
-    }
-
-    .status.recording { color: #f97316; }
-    .status.processing { color: #fbbf24; }
-    .status.done { color: #4ade80; }
-    .status.error { color: #f87171; }
-
-    .transcript-area {
-      width: 100%;
-      margin-top: 2rem;
-      display: none;
-    }
-
-    .transcript-area.visible {
-      display: block;
-    }
-
-    .transcript-label {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.75rem;
-    }
-
-    .transcript-box {
-      background: #262626;
-      border: 1px solid #404040;
-      border-radius: 12px;
-      padding: 1.25rem;
-      font-size: 1rem;
-      line-height: 1.6;
-      color: #e5e5e5;
-      min-height: 120px;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .new-recording-btn {
-      display: none;
-      width: 100%;
-      margin-top: 1.5rem;
-      padding: 1rem;
-      background: transparent;
-      color: #f97316;
-      border: 2px solid #f97316;
-      border-radius: 12px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      min-height: 52px;
-      transition: background 0.2s, color 0.2s;
-    }
-
-    .new-recording-btn.visible {
-      display: block;
-    }
-
-    .new-recording-btn:hover {
-      background: #f97316;
-      color: #fff;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <a href="/dashboard.html" class="back-link">← Back</a>
-    <div class="logo">BLDR</div>
-  </header>
-
-  <main>
-    <div class="record-section" id="recordSection">
-      <button type="button" class="talk-btn" id="talkBtn" aria-label="Hold to talk">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.09-.6-.39-1.14-1-1.14z"/>
-        </svg>
-      </button>
-      <p class="talk-label">Hold to Talk</p>
-      <p class="status" id="status">Ready</p>
-    </div>
-
-    <div class="transcript-area" id="transcriptArea">
-      <p class="transcript-label">Transcript</p>
-      <div class="transcript-box" id="transcriptBox"></div>
-      <button type="button" class="new-recording-btn" id="newRecordingBtn">Start New Recording</button>
-    </div>
-  </main>
-
-  <script>
-    const token = localStorage.getItem('token');
-    if (!token) {
-      window.location.href = '/login.html';
-    }
-
-    const talkBtn = document.getElementById('talkBtn');
-    const statusEl = document.getElementById('status');
-    const recordSection = document.getElementById('recordSection');
-    const transcriptArea = document.getElementById('transcriptArea');
-    const transcriptBox = document.getElementById('transcriptBox');
-    const newRecordingBtn = document.getElementById('newRecordingBtn');
-
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let stream = null;
-    let isRecording = false;
-
-    function setStatus(text, className = '') {
-      statusEl.textContent = text;
-      statusEl.className = 'status' + (className ? ' ' + className : '');
-    }
-
-    async function initMic() {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch {
-        setStatus('Microphone access denied', 'error');
-        talkBtn.disabled = true;
-      }
-    }
-
-    function startRecording() {
-      if (!stream || isRecording) return;
-
-      audioChunks = [];
-      mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunks.push(e.data);
-      };
-
-      mediaRecorder.start();
-      isRecording = true;
-      talkBtn.classList.add('recording');
-      setStatus('Recording...', 'recording');
-    }
-
-    async function stopRecording() {
-      if (!isRecording || !mediaRecorder) return;
-
-      isRecording = false;
-      talkBtn.classList.remove('recording');
-
-      const recorder = mediaRecorder;
-      const done = new Promise((resolve) => {
-        recorder.onstop = resolve;
-      });
-
-      recorder.stop();
-      await done;
-
-      const blob = new Blob(audioChunks, { type: 'audio/webm' });
-      await transcribe(blob);
-    }
-
-    async function transcribe(blob) {
-      setStatus('Processing...', 'processing');
-      talkBtn.disabled = true;
-
-      const formData = new FormData();
-      formData.append('audio', blob, 'audio.webm');
-
-      try {
-        const res = await fetch('/api/transcribe', {
-          method: 'POST',
-          headers: { Authorization: 'Bearer ' + token },
-          body: formData,
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          setStatus(data.error || 'Transcription failed', 'error');
-          talkBtn.disabled = false;
-          return;
-        }
-
-        transcriptBox.textContent = data.transcript;
-        transcriptArea.classList.add('visible');
-        newRecordingBtn.classList.add('visible');
-        recordSection.style.display = 'none';
-        setStatus('Done', 'done');
-      } catch {
-        setStatus('Unable to connect. Please try again.', 'error');
-        talkBtn.disabled = false;
-      }
-    }
-
-    function resetRecording() {
-      transcriptArea.classList.remove('visible');
-      newRecordingBtn.classList.remove('visible');
-      transcriptBox.textContent = '';
-      recordSection.style.display = '';
-      talkBtn.disabled = false;
-      setStatus('Ready');
-    }
-
-    talkBtn.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      startRecording();
-    });
-    talkBtn.addEventListener('mouseup', stopRecording);
-    talkBtn.addEventListener('mouseleave', () => {
-      if (isRecording) stopRecording();
-    });
-
-    talkBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      startRecording();
-    }, { passive: false });
-    talkBtn.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      stopRecording();
-    });
-    talkBtn.addEventListener('touchcancel', stopRecording);
-
-    newRecordingBtn.addEventListener('click', resetRecording);
-
-    initMic();
-  </script>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:flex;flex-direction:column;}
+    header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface);}
+    .logo{font-family:var(--cond);font-weight:900;font-size:1.6rem;letter-spacing:0.08em;color:var(--accent);}
+    .header-tag{font-family:var(--mono);font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;}
+    main{flex:1;padding:24px 20px 40px;max-width:680px;margin:0 auto;width:100%;}
+    .phase-label{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+    #record-panel{display:flex;flex-direction:column;align-items:center;gap:32px;}
+    .mic-wrap{position:relative;display:flex;align-items:center;justify-content:center;margin-top:8px;}
+    .mic-ring{position:absolute;width:140px;height:140px;border-radius:50%;border:2px solid var(--accent);opacity:0;transform:scale(1);transition:opacity 0.2s;}
+    .mic-ring.pulse{animation:ring-pulse 1.2s ease-out infinite;}
+    @keyframes ring-pulse{0%{transform:scale(1);opacity:0.6;}100%{transform:scale(1.9);opacity:0;}}
+    #mic-btn{position:relative;z-index:1;width:110px;height:110px;border-radius:50%;border:3px solid var(--accent);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s,border-color 0.15s,transform 0.1s;-webkit-tap-highlight-color:transparent;touch-action:none;user-select:none;}
+    #mic-btn:active,#mic-btn.recording{background:var(--accent2);border-color:var(--accent2);transform:scale(0.96);}
+    #mic-btn svg{pointer-events:none;}
+    .mic-instruction{font-family:var(--mono);font-size:0.72rem;color:var(--muted);letter-spacing:0.08em;text-align:center;text-transform:uppercase;}
+    #rec-status{font-family:var(--mono);font-size:0.8rem;letter-spacing:0.06em;color:var(--accent);min-height:1.2em;text-align:center;}
+    #rec-status.idle{color:var(--muted);}#rec-status.active{color:var(--accent2);}#rec-status.working{color:var(--accent);}
+    #transcript-panel{display:none;}
+    .transcript-box{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px;font-family:var(--mono);font-size:0.82rem;line-height:1.7;color:var(--text);margin-bottom:20px;white-space:pre-wrap;word-break:break-word;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border-radius:4px;border:none;font-family:var(--cond);font-weight:700;font-size:0.95rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:opacity 0.15s,transform 0.1s;-webkit-tap-highlight-color:transparent;}
+    .btn:active{transform:scale(0.97);}
+    .btn-primary{background:var(--accent);color:#000;width:100%;}
+    .btn-secondary{background:transparent;color:var(--muted);border:1px solid var(--border);width:100%;margin-top:10px;}
+    .btn:disabled{opacity:0.4;cursor:not-allowed;}
+    #structuring-panel{display:none;flex-direction:column;align-items:center;gap:20px;padding:40px 0;}
+    .spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .structuring-msg{font-family:var(--mono);font-size:0.78rem;color:var(--muted);letter-spacing:0.08em;text-align:center;}
+    #log-panel{display:none;}
+    .log-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:12px;}
+    .log-title{font-family:var(--cond);font-weight:900;font-size:1.5rem;letter-spacing:0.04em;color:var(--text);line-height:1.1;}
+    .log-date{font-family:var(--mono);font-size:0.7rem;color:var(--muted);margin-top:4px;letter-spacing:0.08em;}
+    .log-badge{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;padding:4px 10px;border-radius:2px;background:rgba(245,166,35,0.15);color:var(--accent);border:1px solid rgba(245,166,35,0.3);white-space:nowrap;flex-shrink:0;}
+    .log-section{margin-bottom:20px;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+    .log-section-head{background:var(--surface);padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+    .log-section-icon{width:18px;height:18px;flex-shrink:0;opacity:0.7;}
+    .log-section-title{font-family:var(--cond);font-weight:700;font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);}
+    .log-section-body{padding:12px 14px;background:var(--bg);}
+    .log-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .log-meta-item{display:flex;flex-direction:column;gap:3px;}
+    .log-meta-label{font-family:var(--mono);font-size:0.62rem;color:var(--muted);letter-spacing:0.1em;text-transform:up
+<script>
+  let mediaRecorder=null,audioChunks=[],isRecording=false,authToken=null;
+  authToken=localStorage.getItem('token')||localStorage.getItem('bldr_token')||localStorage.getItem('jwt');
+  if(!authToken){window.location.href='/login.html';}
+  const micBtn=document.getElementById('mic-btn'),micRing=document.getElementById('mic-ring'),recStatus=document.getElementById('rec-status'),recordPanel=document.getElementById('record-panel'),transcriptPanel=document.getElementById('transcript-panel'),transcriptText=document.getElementById('transcript-text'),structureBtn=document.getElementById('structure-btn'),rerecordBtn=document.getElementById('rerecord-btn'),structuringPanel=document.getElementById('structuring-panel'),logPanel=document.getElementById('log-panel'),errorMsg=document.getElementById('error-msg'),newRecordingBtn=document.getElementById('new-recording-btn');
+  function showPanel(n){recordPanel.style.display=n==='record'?'flex':'none';transcriptPanel.style.display=n==='transcript'?'block':'none';structuringPanel.style.display=n==='structuring'?'flex':'none';logPanel.style.display=n==='log'?'block':'none';}
+  async function startRecording(){try{const s=await navigator.mediaDevices.getUserMedia({audio:true});audioChunks=[];const m=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':MediaRecorder.isTypeSupported('audio/mp4')?'audio/mp4':'';mediaRecorder=m?new MediaRecorder(s,{mimeType:m}):new MediaRecorder(s);mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data);};mediaRecorder.onstop=()=>{s.getTracks().forEach(t=>t.stop());transcribeAudio();};mediaRecorder.start();isRecording=true;micBtn.classList.add('recording');micRing.classList.add('pulse');recStatus.className='active';recStatus.textContent='● Recording…';}catch(e){recStatus.className='';recStatus.textContent='Microphone access denied';}}
+  function stopRecording(){if(mediaRecorder&&isRecording){isRecording=false;mediaRecorder.stop();micBtn.classList.remove('recording');micRing.classList.remove('pulse');recStatus.className='working';recStatus.textContent='Transcribing…';}}
+  micBtn.addEventListener('mousedown',e=>{e.preventDefault();startRecording();});
+  micBtn.addEventListener('mouseup',e=>{e.preventDefault();stopRecording();});
+  micBtn.addEventListener('mouseleave',e=>{if(isRecording)stopRecording();});
+  micBtn.addEventListener('touchstart',e=>{e.preventDefault();startRecording();},{passive:false});
+  micBtn.addEventListener('touchend',e=>{e.preventDefault();stopRecording();},{passive:false});
+  async function transcribeAudio(){const blob=new Blob(audioChunks,{type:mediaRecorder.mimeType||'audio/webm'});const fd=new FormData();const ext=(mediaRecorder.mimeType||'').includes('mp4')?'mp4':'webm';fd.append('audio',blob,`recording.${ext}`);try{const r=await fetch('/api/transcribe',{method:'POST',headers:{'Authorization':`Bearer ${authToken}`},body:fd});const d=await r.json();if(!r.ok||!d.transcript)throw new Error(d.error||'Transcription failed');transcriptText.textContent=d.transcript;errorMsg.style.display='none';recStatus.className='idle';recStatus.textContent='Ready';showPanel('transcript');}catch(e){recStatus.className='idle';recStatus.textContent='Ready';showPanel('transcript');transcriptText.textContent='';showError('Transcription failed: '+e.message);}}
+  structureBtn.addEventListener('click',async()=>{const t=transcriptText.textContent.trim();if(!t)return;showPanel('structuring');try{const r=await fetch('/api/structure-transcript',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${authToken}`},body:JSON.stringify({transcript:t})});const d=await r.json();if(!r.ok||!d.log)throw new Error(d.error||'Structuring failed');renderLog(d.log);showPanel('log');}catch(e){showPanel('transcript');showError('Could not structure log: '+e.message);}});
+  function renderLog(log){document.getElementById('log-title').textContent=log.project||'Daily Field Log';document.getElementById('log-date').textContent=log.date||'';const g=document.getElementById('overview-grid');g.innerHTML='';[{label:'Weather',value:log.weather},{label:'Crew',value:log.crew_count},{label:'Conditions',value:log.site_conditions}].forEach(i=>{const d=document.createElement('div');d.className='log-meta-item';d.innerHTML=`<span class="log-meta-label">${i.label}</span><span class="log-meta-value">${i.value||'<span class="null-state">Not noted</span>'}</span>`;g.appendChild(d);});const wb=document.getElementById('work-body');wb.innerHTML=(log.work_completed&&log.work_completed.length)?log.work_completed.map(w=>`<div class="work-item"><div class="work-area">${esc(w.area)}</div><div class="work-desc">${esc(w.description)}</div></div>`).join(''):'<span class="null-state">No work items noted</span>';const ib=document.getElementById('issues-body');if(log.issues&&log.issues.length){const s=[...log.issues].sort((a,b)=>({HIGH:0,MEDIUM:1,LOW:2}[a.priority]??3)-({HIGH:0,MEDIUM:1,LOW:2}[b.priority]??3));ib.innerHTML=s.map(i=>`<div class="issue-item"><span class="issue-priority priority-${i.priority}">${i.priority}</span><span class="issue-desc">${esc(i.description)}</span></div>`).join('');}else{ib.innerHTML='<span class="null-state">No issues logged</span>';}const nb=document.getElementById('next-body');nb.innerHTML=(log.next_steps&&log.next_steps.length)?`<ul class="bullet-list">${log.next_steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:'<span class="null-state">No follow-up items noted</span>';if(log.raw_notes&&log.raw_notes.trim()){document.getElementById('notes-text').textContent=log.raw_notes;document.getElementById('section-notes').style.display='block';}else{document.getElementById('section-notes').style.display='none';}}
+  function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function showError(m){errorMsg.textContent=m;errorMsg.style.display='block';}
+  rerecordBtn.addEventListener('click',()=>showPanel('record'));
+  newRecordingBtn.addEventListener('click',()=>showPanel('record'));
+</script>
 </body>
 </html>
