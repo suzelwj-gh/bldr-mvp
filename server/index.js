@@ -6,6 +6,7 @@ require('dotenv').config();
 const Anthropic = require('@anthropic-ai/sdk');
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const authRouter = require('./routes/auth');
+const { requireAuth } = require('./middleware/auth');
 const transcribeRouter = require('./routes/transcribe');
 
 const upload = multer({ storage: multer.memoryStorage() });
