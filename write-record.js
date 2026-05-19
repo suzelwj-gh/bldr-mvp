@@ -1,3 +1,5 @@
 const fs = require('fs');
-const html = fs.readFileSync('public/record.html.bak', 'utf8');
-console.log('size:', html.length);
+let h = fs.readFileSync('public/record.html', 'utf8');
+h = h.replace("if(!authToken){window.location.href='/login.html';}", "");
+fs.writeFileSync('public/record.html', h);
+console.log('done', fs.statSync('public/record.html').size);
