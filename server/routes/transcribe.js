@@ -1,3 +1,5 @@
+globalThis.File = require('buffer').File ?? globalThis.File;
+
 const express = require('express');
 const OpenAI = require('openai');
 const { toFile } = require('openai');
