@@ -1,77 +1,723 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>BLDR — Record</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;500;600;700;900&family=Barlow+Condensed:wght@600;700;900&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>BLDR — Daily Log</title>
   <style>
-    :root {
-      --bg:#0a0c0f;--surface:#111418;--border:#1e2329;--accent:#f5a623;--accent2:#e8380d;--text:#e8eaed;--muted:#6b7280;--warn:#f59e0b;--danger:#ef4444;--mono:'Share Tech Mono',monospace;--sans:'Barlow',sans-serif;--cond:'Barlow Condensed',sans-serif;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0c0f;
+      color: #e8eaed;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:flex;flex-direction:column;}
-    header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface);}
-    .logo{font-family:var(--cond);font-weight:900;font-size:1.6rem;letter-spacing:0.08em;color:var(--accent);}
-    .header-tag{font-family:var(--mono);font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;}
-    main{flex:1;padding:24px 20px 40px;max-width:680px;margin:0 auto;width:100%;}
-    .phase-label{font-family:var(--mono);font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
-    #record-panel{display:flex;flex-direction:column;align-items:center;gap:32px;}
-    .mic-wrap{position:relative;display:flex;align-items:center;justify-content:center;margin-top:8px;}
-    .mic-ring{position:absolute;width:140px;height:140px;border-radius:50%;border:2px solid var(--accent);opacity:0;transform:scale(1);transition:opacity 0.2s;}
-    .mic-ring.pulse{animation:ring-pulse 1.2s ease-out infinite;}
-    @keyframes ring-pulse{0%{transform:scale(1);opacity:0.6;}100%{transform:scale(1.9);opacity:0;}}
-    #mic-btn{position:relative;z-index:1;width:110px;height:110px;border-radius:50%;border:3px solid var(--accent);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s,border-color 0.15s,transform 0.1s;-webkit-tap-highlight-color:transparent;touch-action:none;user-select:none;}
-    #mic-btn:active,#mic-btn.recording{background:var(--accent2);border-color:var(--accent2);transform:scale(0.96);}
-    #mic-btn svg{pointer-events:none;}
-    .mic-instruction{font-family:var(--mono);font-size:0.72rem;color:var(--muted);letter-spacing:0.08em;text-align:center;text-transform:uppercase;}
-    #rec-status{font-family:var(--mono);font-size:0.8rem;letter-spacing:0.06em;color:var(--accent);min-height:1.2em;text-align:center;}
-    #rec-status.idle{color:var(--muted);}#rec-status.active{color:var(--accent2);}#rec-status.working{color:var(--accent);}
-    #transcript-panel{display:none;}
-    .transcript-box{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px;font-family:var(--mono);font-size:0.82rem;line-height:1.7;color:var(--text);margin-bottom:20px;white-space:pre-wrap;word-break:break-word;}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border-radius:4px;border:none;font-family:var(--cond);font-weight:700;font-size:0.95rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:opacity 0.15s,transform 0.1s;-webkit-tap-highlight-color:transparent;}
-    .btn:active{transform:scale(0.97);}
-    .btn-primary{background:var(--accent);color:#000;width:100%;}
-    .btn-secondary{background:transparent;color:var(--muted);border:1px solid var(--border);width:100%;margin-top:10px;}
-    .btn:disabled{opacity:0.4;cursor:not-allowed;}
-    #structuring-panel{display:none;flex-direction:column;align-items:center;gap:20px;padding:40px 0;}
-    .spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    .structuring-msg{font-family:var(--mono);font-size:0.78rem;color:var(--muted);letter-spacing:0.08em;text-align:center;}
-    #log-panel{display:none;}
-    .log-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:12px;}
-    .log-title{font-family:var(--cond);font-weight:900;font-size:1.5rem;letter-spacing:0.04em;color:var(--text);line-height:1.1;}
-    .log-date{font-family:var(--mono);font-size:0.7rem;color:var(--muted);margin-top:4px;letter-spacing:0.08em;}
-    .log-badge{font-family:var(--mono);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;padding:4px 10px;border-radius:2px;background:rgba(245,166,35,0.15);color:var(--accent);border:1px solid rgba(245,166,35,0.3);white-space:nowrap;flex-shrink:0;}
-    .log-section{margin-bottom:20px;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
-    .log-section-head{background:var(--surface);padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
-    .log-section-icon{width:18px;height:18px;flex-shrink:0;opacity:0.7;}
-    .log-section-title{font-family:var(--cond);font-weight:700;font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);}
-    .log-section-body{padding:12px 14px;background:var(--bg);}
-    .log-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-    .log-meta-item{display:flex;flex-direction:column;gap:3px;}
-    .log-meta-label{font-family:var(--mono);font-size:0.62rem;color:var(--muted);letter-spacing:0.1em;text-transform:up
-<script>
-  let mediaRecorder=null,audioChunks=[],isRecording=false,authToken=null;
-  authToken=localStorage.getItem('token')||localStorage.getItem('bldr_token')||localStorage.getItem('jwt');
-  if(!authToken){window.location.href='/login.html';}
-  const micBtn=document.getElementById('mic-btn'),micRing=document.getElementById('mic-ring'),recStatus=document.getElementById('rec-status'),recordPanel=document.getElementById('record-panel'),transcriptPanel=document.getElementById('transcript-panel'),transcriptText=document.getElementById('transcript-text'),structureBtn=document.getElementById('structure-btn'),rerecordBtn=document.getElementById('rerecord-btn'),structuringPanel=document.getElementById('structuring-panel'),logPanel=document.getElementById('log-panel'),errorMsg=document.getElementById('error-msg'),newRecordingBtn=document.getElementById('new-recording-btn');
-  function showPanel(n){recordPanel.style.display=n==='record'?'flex':'none';transcriptPanel.style.display=n==='transcript'?'block':'none';structuringPanel.style.display=n==='structuring'?'flex':'none';logPanel.style.display=n==='log'?'block':'none';}
-  async function startRecording(){try{const s=await navigator.mediaDevices.getUserMedia({audio:true});audioChunks=[];const m=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':MediaRecorder.isTypeSupported('audio/mp4')?'audio/mp4':'';mediaRecorder=m?new MediaRecorder(s,{mimeType:m}):new MediaRecorder(s);mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data);};mediaRecorder.onstop=()=>{s.getTracks().forEach(t=>t.stop());transcribeAudio();};mediaRecorder.start();isRecording=true;micBtn.classList.add('recording');micRing.classList.add('pulse');recStatus.className='active';recStatus.textContent='● Recording…';}catch(e){recStatus.className='';recStatus.textContent='Microphone access denied';}}
-  function stopRecording(){if(mediaRecorder&&isRecording){isRecording=false;mediaRecorder.stop();micBtn.classList.remove('recording');micRing.classList.remove('pulse');recStatus.className='working';recStatus.textContent='Transcribing…';}}
-  micBtn.addEventListener('mousedown',e=>{e.preventDefault();startRecording();});
-  micBtn.addEventListener('mouseup',e=>{e.preventDefault();stopRecording();});
-  micBtn.addEventListener('mouseleave',e=>{if(isRecording)stopRecording();});
-  micBtn.addEventListener('touchstart',e=>{e.preventDefault();startRecording();},{passive:false});
-  micBtn.addEventListener('touchend',e=>{e.preventDefault();stopRecording();},{passive:false});
-  async function transcribeAudio(){const blob=new Blob(audioChunks,{type:mediaRecorder.mimeType||'audio/webm'});const fd=new FormData();const ext=(mediaRecorder.mimeType||'').includes('mp4')?'mp4':'webm';fd.append('audio',blob,`recording.${ext}`);try{const r=await fetch('/api/transcribe',{method:'POST',headers:{'Authorization':`Bearer ${authToken}`},body:fd});const d=await r.json();if(!r.ok||!d.transcript)throw new Error(d.error||'Transcription failed');transcriptText.textContent=d.transcript;errorMsg.style.display='none';recStatus.className='idle';recStatus.textContent='Ready';showPanel('transcript');}catch(e){recStatus.className='idle';recStatus.textContent='Ready';showPanel('transcript');transcriptText.textContent='';showError('Transcription failed: '+e.message);}}
-  structureBtn.addEventListener('click',async()=>{const t=transcriptText.textContent.trim();if(!t)return;showPanel('structuring');try{const r=await fetch('/api/structure-transcript',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${authToken}`},body:JSON.stringify({transcript:t})});const d=await r.json();if(!r.ok||!d.log)throw new Error(d.error||'Structuring failed');renderLog(d.log);showPanel('log');}catch(e){showPanel('transcript');showError('Could not structure log: '+e.message);}});
-  function renderLog(log){document.getElementById('log-title').textContent=log.project||'Daily Field Log';document.getElementById('log-date').textContent=log.date||'';const g=document.getElementById('overview-grid');g.innerHTML='';[{label:'Weather',value:log.weather},{label:'Crew',value:log.crew_count},{label:'Conditions',value:log.site_conditions}].forEach(i=>{const d=document.createElement('div');d.className='log-meta-item';d.innerHTML=`<span class="log-meta-label">${i.label}</span><span class="log-meta-value">${i.value||'<span class="null-state">Not noted</span>'}</span>`;g.appendChild(d);});const wb=document.getElementById('work-body');wb.innerHTML=(log.work_completed&&log.work_completed.length)?log.work_completed.map(w=>`<div class="work-item"><div class="work-area">${esc(w.area)}</div><div class="work-desc">${esc(w.description)}</div></div>`).join(''):'<span class="null-state">No work items noted</span>';const ib=document.getElementById('issues-body');if(log.issues&&log.issues.length){const s=[...log.issues].sort((a,b)=>({HIGH:0,MEDIUM:1,LOW:2}[a.priority]??3)-({HIGH:0,MEDIUM:1,LOW:2}[b.priority]??3));ib.innerHTML=s.map(i=>`<div class="issue-item"><span class="issue-priority priority-${i.priority}">${i.priority}</span><span class="issue-desc">${esc(i.description)}</span></div>`).join('');}else{ib.innerHTML='<span class="null-state">No issues logged</span>';}const nb=document.getElementById('next-body');nb.innerHTML=(log.next_steps&&log.next_steps.length)?`<ul class="bullet-list">${log.next_steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:'<span class="null-state">No follow-up items noted</span>';if(log.raw_notes&&log.raw_notes.trim()){document.getElementById('notes-text').textContent=log.raw_notes;document.getElementById('section-notes').style.display='block';}else{document.getElementById('section-notes').style.display='none';}}
-  function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-  function showError(m){errorMsg.textContent=m;errorMsg.style.display='block';}
-  rerecordBtn.addEventListener('click',()=>showPanel('record'));
-  newRecordingBtn.addEventListener('click',()=>showPanel('record'));
-</script>
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #1e2329;
+    }
+
+    .back {
+      color: #f5a623;
+      text-decoration: none;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      padding: 0.5rem;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #f5a623;
+      letter-spacing: 0.06em;
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 2.5rem;
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* Record */
+    #panel-record {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 0 1rem;
+    }
+
+    #panel-record.active {
+      display: flex;
+    }
+
+    .hint {
+      font-size: 0.8125rem;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 2rem;
+    }
+
+    .mic-wrap {
+      position: relative;
+      margin-bottom: 1.25rem;
+    }
+
+    .mic-ring {
+      position: absolute;
+      inset: -15px;
+      border-radius: 50%;
+      border: 2px solid #f5a623;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .mic-ring.pulse {
+      animation: pulse 1.2s ease-out infinite;
+    }
+
+    @keyframes pulse {
+      0%   { transform: scale(1); opacity: 0.55; }
+      100% { transform: scale(1.55); opacity: 0; }
+    }
+
+    #mic-btn {
+      position: relative;
+      z-index: 1;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 3px solid #f5a623;
+      background: #111418;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+
+    #mic-btn:active,
+    #mic-btn.recording {
+      background: #e8380d;
+      border-color: #e8380d;
+      transform: scale(0.96);
+    }
+
+    #mic-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    #mic-btn svg { pointer-events: none; }
+
+    .mic-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #9ca3af;
+      margin-bottom: 0.75rem;
+    }
+
+    #status {
+      font-size: 0.9375rem;
+      color: #6b7280;
+      min-height: 1.4em;
+      text-align: center;
+    }
+
+    #status.recording { color: #e8380d; }
+    #status.working   { color: #f5a623; }
+    #status.error     { color: #ef4444; }
+
+    /* Transcript */
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #6b7280;
+      margin-bottom: 0.75rem;
+    }
+
+    .transcript-box {
+      background: #111418;
+      border: 1px solid #1e2329;
+      border-radius: 8px;
+      padding: 1.125rem;
+      font-size: 0.9375rem;
+      line-height: 1.65;
+      color: #e8eaed;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-bottom: 1.25rem;
+      min-height: 100px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 52px;
+      padding: 0.875rem 1.25rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn:active { opacity: 0.85; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-primary {
+      background: #f5a623;
+      color: #0a0c0f;
+      margin-bottom: 0.75rem;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #9ca3af;
+      border: 1px solid #1e2329;
+    }
+
+    .error-banner {
+      display: none;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      border-radius: 8px;
+      padding: 0.875rem 1rem;
+      font-size: 0.875rem;
+      color: #fca5a5;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .error-banner.visible { display: block; }
+
+    /* Structuring */
+    #panel-structuring {
+      text-align: center;
+      padding: 3rem 0;
+    }
+
+    #panel-structuring.active { display: block; }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid #1e2329;
+      border-top-color: #f5a623;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 0 auto 1.25rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .structuring-text {
+      color: #9ca3af;
+      font-size: 0.9375rem;
+    }
+
+    /* Daily log */
+    .log-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .log-header h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #e8eaed;
+      line-height: 1.2;
+      margin-bottom: 0.25rem;
+    }
+
+    .log-header .log-date {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .log-card {
+      background: #111418;
+      border: 1px solid #1e2329;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .log-card-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #6b7280;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #1e2329;
+      background: #0d1014;
+    }
+
+    .log-card-body {
+      padding: 1rem;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .meta-item label {
+      display: block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+      margin-bottom: 0.25rem;
+    }
+
+    .meta-item span {
+      font-size: 0.9375rem;
+      color: #e8eaed;
+    }
+
+    .empty {
+      font-size: 0.875rem;
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    .work-item {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #1e2329;
+    }
+
+    .work-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .work-item:first-child { padding-top: 0; }
+
+    .work-area {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #f5a623;
+      margin-bottom: 0.25rem;
+    }
+
+    .work-desc {
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      color: #e8eaed;
+    }
+
+    .issue-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #1e2329;
+    }
+
+    .issue-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .issue-row:first-child { padding-top: 0; }
+
+    .priority {
+      flex-shrink: 0;
+      font-size: 0.625rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+    }
+
+    .priority-HIGH   { background: rgba(239,68,68,0.2);  color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
+    .priority-MEDIUM { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); }
+    .priority-LOW    { background: rgba(107,114,128,0.25); color: #9ca3af; border: 1px solid rgba(107,114,128,0.35); }
+
+    .issue-desc {
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      color: #e8eaed;
+    }
+
+    .steps-list {
+      list-style: none;
+    }
+
+    .steps-list li {
+      position: relative;
+      padding: 0.5rem 0 0.5rem 1.25rem;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      border-bottom: 1px solid #1e2329;
+    }
+
+    .steps-list li:last-child { border-bottom: none; }
+
+    .steps-list li::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      color: #f5a623;
+      font-weight: 700;
+    }
+
+    .raw-notes {
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      color: #d1d5db;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/dashboard.html" class="back">← Back</a>
+    <div class="logo">BLDR</div>
+    <span style="width: 60px;"></span>
+  </header>
+
+  <main>
+    <!-- Record -->
+    <section id="panel-record" class="panel active">
+      <p class="hint">Voice capture</p>
+      <div class="mic-wrap">
+        <div class="mic-ring" id="mic-ring"></div>
+        <button type="button" id="mic-btn" aria-label="Hold to talk">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="9" y="3" width="6" height="11" rx="3" fill="#e8eaed"/>
+            <path d="M6 11a6 6 0 0 0 12 0" stroke="#e8eaed" stroke-width="2" stroke-linecap="round"/>
+            <line x1="12" y1="17" x2="12" y2="21" stroke="#e8eaed" stroke-width="2" stroke-linecap="round"/>
+            <line x1="9" y1="21" x2="15" y2="21" stroke="#e8eaed" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <p class="mic-label">Hold to Talk</p>
+      <p id="status">Ready</p>
+    </section>
+
+    <!-- Transcript -->
+    <section id="panel-transcript" class="panel">
+      <p class="section-label">Transcript</p>
+      <div class="error-banner" id="error-banner"></div>
+      <div class="transcript-box" id="transcript-text"></div>
+      <button type="button" class="btn btn-primary" id="structure-btn">Structure into Daily Log</button>
+      <button type="button" class="btn btn-secondary" id="rerecord-btn">Record Again</button>
+    </section>
+
+    <!-- Structuring -->
+    <section id="panel-structuring" class="panel">
+      <div class="spinner"></div>
+      <p class="structuring-text">Structuring your daily log…</p>
+    </section>
+
+    <!-- Daily log -->
+    <section id="panel-log" class="panel">
+      <div class="log-header">
+        <h1 id="log-project">Daily Field Log</h1>
+        <p class="log-date" id="log-date"></p>
+      </div>
+
+      <div class="log-card">
+        <div class="log-card-title">Overview</div>
+        <div class="log-card-body">
+          <div class="meta-grid">
+            <div class="meta-item">
+              <label>Weather</label>
+              <span id="log-weather">—</span>
+            </div>
+            <div class="meta-item">
+              <label>Crew</label>
+              <span id="log-crew">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="log-card">
+        <div class="log-card-title">Work Completed</div>
+        <div class="log-card-body" id="log-work"></div>
+      </div>
+
+      <div class="log-card">
+        <div class="log-card-title">Issues</div>
+        <div class="log-card-body" id="log-issues"></div>
+      </div>
+
+      <div class="log-card">
+        <div class="log-card-title">Next Steps</div>
+        <div class="log-card-body" id="log-next"></div>
+      </div>
+
+      <div class="log-card" id="card-raw-notes" style="display:none;">
+        <div class="log-card-title">Additional Notes</div>
+        <div class="log-card-body">
+          <p class="raw-notes" id="log-raw-notes"></p>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-primary" id="new-log-btn" style="margin-top:0.5rem;">New Recording</button>
+    </section>
+  </main>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    const panels = {
+      record: document.getElementById('panel-record'),
+      transcript: document.getElementById('panel-transcript'),
+      structuring: document.getElementById('panel-structuring'),
+      log: document.getElementById('panel-log'),
+    };
+
+    const micBtn = document.getElementById('mic-btn');
+    const micRing = document.getElementById('mic-ring');
+    const statusEl = document.getElementById('status');
+    const transcriptText = document.getElementById('transcript-text');
+    const errorBanner = document.getElementById('error-banner');
+    const structureBtn = document.getElementById('structure-btn');
+    const rerecordBtn = document.getElementById('rerecord-btn');
+    const newLogBtn = document.getElementById('new-log-btn');
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    let micStream = null;
+
+    function showPanel(name) {
+      Object.values(panels).forEach((p) => p.classList.remove('active'));
+      panels[name].classList.add('active');
+    }
+
+    function setStatus(text, className) {
+      statusEl.textContent = text;
+      statusEl.className = className || '';
+    }
+
+    function showError(msg) {
+      errorBanner.textContent = msg;
+      errorBanner.classList.add('visible');
+    }
+
+    function hideError() {
+      errorBanner.classList.remove('visible');
+      errorBanner.textContent = '';
+    }
+
+    function esc(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function fmt(value) {
+      if (value == null || value === '') return '<span class="empty">Not noted</span>';
+      return esc(value);
+    }
+
+    async function ensureMic() {
+      if (micStream) return micStream;
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      return micStream;
+    }
+
+    async function startRecording() {
+      if (isRecording) return;
+      hideError();
+      try {
+        const stream = await ensureMic();
+        audioChunks = [];
+        const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : MediaRecorder.isTypeSupported('audio/webm')
+            ? 'audio/webm'
+            : '';
+        mediaRecorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+        mediaRecorder.onstop = () => transcribeAudio();
+        mediaRecorder.start();
+        isRecording = true;
+        micBtn.classList.add('recording');
+        micRing.classList.add('pulse');
+        setStatus('Recording…', 'recording');
+      } catch {
+        setStatus('Microphone access denied', 'error');
+      }
+    }
+
+    function stopRecording() {
+      if (!isRecording || !mediaRecorder) return;
+      isRecording = false;
+      micBtn.classList.remove('recording');
+      micRing.classList.remove('pulse');
+      setStatus('Transcribing…', 'working');
+      mediaRecorder.stop();
+    }
+
+    micBtn.addEventListener('mousedown', (e) => { e.preventDefault(); startRecording(); });
+    micBtn.addEventListener('mouseup', (e) => { e.preventDefault(); stopRecording(); });
+    micBtn.addEventListener('mouseleave', () => { if (isRecording) stopRecording(); });
+    micBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); }, { passive: false });
+    micBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); }, { passive: false });
+    micBtn.addEventListener('touchcancel', stopRecording);
+
+    async function transcribeAudio() {
+      const blob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
+      const ext = (mediaRecorder?.mimeType || '').includes('mp4') ? 'mp4' : 'webm';
+      const formData = new FormData();
+      formData.append('audio', blob, `recording.${ext}`);
+
+      try {
+        const res = await fetch('/api/transcribe', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token },
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok || !data.transcript) {
+          throw new Error(data.error || 'Transcription failed');
+        }
+        transcriptText.textContent = data.transcript;
+        hideError();
+        setStatus('Ready');
+        showPanel('transcript');
+      } catch (err) {
+        transcriptText.textContent = '';
+        showPanel('transcript');
+        showError(err.message || 'Transcription failed');
+        setStatus('Ready');
+      }
+    }
+
+    structureBtn.addEventListener('click', async () => {
+      const transcript = transcriptText.textContent.trim();
+      if (!transcript) return;
+
+      hideError();
+      structureBtn.disabled = true;
+      showPanel('structuring');
+
+      try {
+        const res = await fetch('/api/structure-transcript', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + token,
+          },
+          body: JSON.stringify({ transcript }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Structuring failed');
+        }
+
+        const log = data.log || data;
+        renderLog(log);
+        showPanel('log');
+      } catch (err) {
+        showPanel('transcript');
+        showError(err.message || 'Could not structure log');
+      } finally {
+        structureBtn.disabled = false;
+      }
+    });
+
+    function renderLog(log) {
+      document.getElementById('log-project').textContent = log.project || 'Daily Field Log';
+      document.getElementById('log-date').textContent = log.date || '';
+      document.getElementById('log-weather').innerHTML = fmt(log.weather);
+      document.getElementById('log-crew').innerHTML = fmt(log.crew_count);
+
+      const workEl = document.getElementById('log-work');
+      const work = Array.isArray(log.work_completed) ? log.work_completed : [];
+      if (work.length === 0) {
+        workEl.innerHTML = '<p class="empty">No work items noted</p>';
+      } else {
+        workEl.innerHTML = work.map((item) => {
+          if (typeof item === 'string') {
+            return `<div class="work-item"><div class="work-desc">${esc(item)}</div></div>`;
+          }
+          const area = item.area ? `<div class="work-area">${esc(item.area)}</div>` : '';
+          return `<div class="work-item">${area}<div class="work-desc">${esc(item.description)}</div></div>`;
+        }).join('');
+      }
+
+      const issuesEl = document.getElementById('log-issues');
+      const issues = Array.isArray(log.issues) ? log.issues : [];
+      if (issues.length === 0) {
+        issuesEl.innerHTML = '<p class="empty">No issues logged</p>';
+      } else {
+        const order = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+        const sorted = [...issues].sort(
+          (a, b) => (order[a.priority] ?? 3) - (order[b.priority] ?? 3)
+        );
+        issuesEl.innerHTML = sorted.map((item) => {
+          const pri = (item.priority || 'LOW').toUpperCase();
+          return `<div class="issue-row">
+            <span class="priority priority-${pri}">${esc(pri)}</span>
+            <span class="issue-desc">${esc(item.description || item)}</span>
+          </div>`;
+        }).join('');
+      }
+
+      const nextEl = document.getElementById('log-next');
+      const steps = Array.isArray(log.next_steps) ? log.next_steps : [];
+      if (steps.length === 0) {
+        nextEl.innerHTML = '<p class="empty">No follow-up items noted</p>';
+      } else {
+        nextEl.innerHTML = `<ul class="steps-list">${steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>`;
+      }
+
+      const rawCard = document.getElementById('card-raw-notes');
+      const rawNotes = log.raw_notes && String(log.raw_notes).trim();
+      if (rawNotes) {
+        document.getElementById('log-raw-notes').textContent = rawNotes;
+        rawCard.style.display = 'block';
+      } else {
+        rawCard.style.display = 'none';
+      }
+    }
+
+    rerecordBtn.addEventListener('click', () => {
+      hideError();
+      transcriptText.textContent = '';
+      setStatus('Ready');
+      showPanel('record');
+    });
+
+    newLogBtn.addEventListener('click', () => {
+      hideError();
+      transcriptText.textContent = '';
+      setStatus('Ready');
+      showPanel('record');
+    });
+  </script>
 </body>
 </html>
