@@ -5,8 +5,14 @@ require('dotenv').config();
 
 const Anthropic = require('@anthropic-ai/sdk');
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+});
 const authRouter = require('./routes/auth');
 const { requireAuth } = require('./middleware/auth');
+const authenticateToken = requireAuth;
 const transcribeRouter = require('./routes/transcribe');
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -165,6 +171,44 @@ app.post('/api/structure-action', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Claude API error (structure-action):', err);
     res.status(500).json({ error: 'Failed to structure transcript. Please try again.' });
+  }
+});
+
+app.post('/api/notes', authenticateToken, async (req, res) => {
+  const { type, structured, rawTranscript } = req.body;
+  if (!type || !structured) return res.status(400).json({ error: 'Missing fields.' });
+  try {
+    const result = await pool.query(
+      'INSERT INTO notes (user_id, type, structured, raw_transcript) VALUES ($1, $2, $3, $4) RETURNING id, created_at',
+      [req.user.id, type, JSON.stringify(structured), rawTranscript || null]
+    );
+    res.json({ id: result.rows[0].id, createdAt: result.rows[0].created_at });
+  } catch (err) {
+    console.error('Save note error:', err);
+    res.status(500).json({ error: 'Failed to save note.' });
+  }
+});
+
+app.get('/api/notes/today', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, type, structured, raw_transcript, created_at
+       FROM notes
+       WHERE user_id = $1 AND created_at::date = NOW()::date
+       ORDER BY created_at ASC`,
+      [req.user.id]
+    );
+    const notes = result.rows.map(r => ({
+      id: r.id,
+      type: r.type,
+      structured: r.structured,
+      rawTranscript: r.raw_transcript,
+      createdAt: r.created_at
+    }));
+    res.json({ notes });
+  } catch (err) {
+    console.error('Fetch notes error:', err);
+    res.status(500).json({ error: 'Failed to fetch notes.' });
   }
 });
 
