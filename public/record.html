@@ -565,7 +565,7 @@
         isRecording = true;
         micBtn.classList.add('recording');
         micRing.classList.add('pulse');
-        setStatus('Recording…', 'recording');
+        setStatus('Recording... (tap to stop)', 'recording');
       } catch {
         setStatus('Microphone access denied', 'error');
       }
@@ -576,16 +576,17 @@
       isRecording = false;
       micBtn.classList.remove('recording');
       micRing.classList.remove('pulse');
-      setStatus('Transcribing…', 'working');
+      setStatus('Processing...', 'working');
       mediaRecorder.stop();
     }
 
-    micBtn.addEventListener('mousedown', (e) => { e.preventDefault(); startRecording(); });
-    micBtn.addEventListener('mouseup', (e) => { e.preventDefault(); stopRecording(); });
-    micBtn.addEventListener('mouseleave', () => { if (isRecording) stopRecording(); });
-    micBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); }, { passive: false });
-    micBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); }, { passive: false });
-    micBtn.addEventListener('touchcancel', stopRecording);
+    micBtn.addEventListener('click', () => {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    });
 
     async function transcribeAudio() {
       const blob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
