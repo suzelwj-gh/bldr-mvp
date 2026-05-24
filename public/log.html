@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BLDR — Today's Log</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0c0f;
+      color: #e8eaed;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #1e2329;
+    }
+
+    .back {
+      color: #f5a623;
+      text-decoration: none;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      padding: 0.5rem;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-center {
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #f5a623;
+      letter-spacing: 0.06em;
+      line-height: 1.2;
+    }
+
+    .page-title {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: #6b7280;
+      margin-top: 0.2rem;
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 2.5rem;
+    }
+
+    .counts {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .count-pill {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      border: 1px solid #1e2329;
+      background: #111418;
+    }
+
+    .count-pill .num {
+      font-family: 'Courier New', Courier, monospace;
+      color: #e8eaed;
+      margin-left: 0.35rem;
+    }
+
+    .count-issues { border-color: rgba(239,68,68,0.4); color: #f87171; }
+    .count-progress { border-color: rgba(34,197,94,0.4); color: #4ade80; }
+    .count-rfi { border-color: rgba(245,166,35,0.4); color: #fbbf24; }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #6b7280;
+      font-size: 1rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #9ca3af;
+      font-size: 0.9375rem;
+    }
+
+    .error-banner {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      border-radius: 8px;
+      padding: 0.875rem 1rem;
+      font-size: 0.875rem;
+      color: #fca5a5;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .action-card {
+      background: #111418;
+      border: 1px solid #1e2329;
+      border-radius: 6px;
+      padding: 1.25rem 1.25rem 1.25rem 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .action-card-issue { border-left: 6px solid #ef4444; }
+    .action-card-progress { border-left: 6px solid #22c55e; }
+    .action-card-rfi { border-left: 6px solid #f5a623; }
+
+    .action-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .action-title {
+      font-size: 1.125rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      color: #e8eaed;
+      line-height: 1.2;
+    }
+
+    .action-time {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.6875rem;
+      color: #6b7280;
+      flex-shrink: 0;
+    }
+
+    .action-badge {
+      flex-shrink: 0;
+      font-size: 0.625rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 0.3rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .badge-HIGH { background: rgba(239,68,68,0.25); color: #f87171; border: 1px solid #ef4444; }
+    .badge-MEDIUM { background: rgba(245,158,11,0.25); color: #fbbf24; border: 1px solid #f59e0b; }
+    .badge-LOW { background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid #22c55e; }
+
+    .action-field {
+      margin-bottom: 1rem;
+    }
+
+    .action-field:last-child {
+      margin-bottom: 0;
+    }
+
+    .action-label {
+      font-size: 0.625rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #6b7280;
+      margin-bottom: 0.35rem;
+    }
+
+    .action-value {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.9375rem;
+      line-height: 1.55;
+      color: #e8eaed;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/record.html" class="back">← Back</a>
+    <div class="header-center">
+      <div class="logo">BLDR</div>
+      <div class="page-title">TODAY'S LOG</div>
+    </div>
+    <span style="width: 60px;"></span>
+  </header>
+
+  <main>
+    <div id="counts" class="counts" style="display: none;"></div>
+    <div id="loading" class="loading">Loading today's notes…</div>
+    <div id="error" class="error-banner" style="display: none;"></div>
+    <div id="empty" class="empty-state" style="display: none;">No notes recorded today</div>
+    <div id="notes-list"></div>
+  </main>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    const countsEl = document.getElementById('counts');
+    const loadingEl = document.getElementById('loading');
+    const errorEl = document.getElementById('error');
+    const emptyEl = document.getElementById('empty');
+    const notesListEl = document.getElementById('notes-list');
+
+    function esc(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function fieldHtml(label, value) {
+      const display = value != null && String(value).trim() !== '' ? esc(value) : '—';
+      return `<div class="action-field">
+        <div class="action-label">${esc(label)}</div>
+        <div class="action-value">${display}</div>
+      </div>`;
+    }
+
+    function badgeHtml(level) {
+      if (!level) return '';
+      const p = String(level).toUpperCase();
+      return `<span class="action-badge badge-${p}">${esc(p)}</span>`;
+    }
+
+    function formatTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    function renderNoteCard(note) {
+      const s = note.structured || {};
+      const time = formatTime(note.createdAt);
+      let cardClass = 'action-card';
+      let title = '';
+      let badge = '';
+      let fields = '';
+
+      if (note.type === 'issue') {
+        cardClass += ' action-card-issue';
+        title = 'ISSUE LOGGED';
+        badge = badgeHtml(s.priority);
+        fields = [
+          fieldHtml('Area', s.area),
+          fieldHtml('Description', s.description),
+          fieldHtml('Impact', s.impact),
+          fieldHtml('Recommended Action', s.recommended_action),
+        ].join('');
+      } else if (note.type === 'progress') {
+        cardClass += ' action-card-progress';
+        title = 'PROGRESS LOGGED';
+        fields = [
+          fieldHtml('Area', s.area),
+          fieldHtml('Work Completed', s.work_completed),
+          fieldHtml('Crew', s.crew),
+        ].join('');
+      } else if (note.type === 'rfi') {
+        cardClass += ' action-card-rfi';
+        title = 'RFI';
+        badge = badgeHtml(s.urgency);
+        const reference = s.area_affected || s.notes || '';
+        fields = [
+          fieldHtml('Subject', s.subject),
+          fieldHtml('Question', s.question),
+          fieldHtml('Reference', reference),
+        ].join('');
+      } else {
+        cardClass += ' action-card-rfi';
+        title = (note.type || 'NOTE').toUpperCase();
+        fields = fieldHtml('Details', JSON.stringify(s, null, 2));
+      }
+
+      return `<div class="${cardClass}">
+        <div class="action-card-top">
+          <div>
+            <h2 class="action-title">${title}</h2>
+            ${time ? `<div class="action-time">${esc(time)}</div>` : ''}
+          </div>
+          ${badge}
+        </div>
+        ${fields}
+      </div>`;
+    }
+
+    function renderCounts(notes) {
+      const issues = notes.filter(n => n.type === 'issue').length;
+      const progress = notes.filter(n => n.type === 'progress').length;
+      const rfis = notes.filter(n => n.type === 'rfi').length;
+      countsEl.innerHTML = `
+        <span class="count-pill count-issues">Issues<span class="num">${issues}</span></span>
+        <span class="count-pill count-progress">Progress<span class="num">${progress}</span></span>
+        <span class="count-pill count-rfi">RFIs<span class="num">${rfis}</span></span>
+      `;
+      countsEl.style.display = 'flex';
+    }
+
+    async function loadNotes() {
+      try {
+        const res = await fetch('/api/notes/today', {
+          headers: { Authorization: 'Bearer ' + token },
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to load notes');
+        }
+
+        loadingEl.style.display = 'none';
+        const notes = data.notes || [];
+
+        if (notes.length === 0) {
+          emptyEl.style.display = 'block';
+          return;
+        }
+
+        renderCounts(notes);
+        notesListEl.innerHTML = notes.map(renderNoteCard).join('');
+      } catch (err) {
+        loadingEl.style.display = 'none';
+        errorEl.textContent = err.message || 'Could not load notes';
+        errorEl.style.display = 'block';
+      }
+    }
+
+    loadNotes();
+  </script>
+</body>
+</html>
