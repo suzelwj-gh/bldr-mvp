@@ -61,7 +61,7 @@ If the transcript doesn't mention something, use null for strings or [] for arra
 
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5-20251001',
       max_tokens: 1024,
       messages: [
         {
