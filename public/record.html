@@ -436,6 +436,24 @@
       </div>`;
     }
 
+    async function saveNote(type, structured, rawTranscript) {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/notes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ type, structured, rawTranscript })
+        });
+        const data = await res.json();
+        console.log('Note saved:', data.id);
+      } catch (err) {
+        console.warn('Could not save note:', err);
+      }
+    }
+
     function renderActionCard(data) {
       let cardClass = 'action-card';
       let title = '';
@@ -599,6 +617,7 @@
 
         renderActionCard(data);
         showPanel('action');
+        saveNote(data.type, data, transcript);
       } catch (err) {
         showPanel('transcript');
         showError(err.message || 'Could not structure note');
