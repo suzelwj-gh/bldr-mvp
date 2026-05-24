@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>BLDR — Daily Log</title>
+  <title>BLDR — Field Note</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -237,154 +237,72 @@
       font-size: 0.9375rem;
     }
 
-    /* Daily log */
-    .log-header {
-      margin-bottom: 1.5rem;
-    }
-
-    .log-header h1 {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: #e8eaed;
-      line-height: 1.2;
-      margin-bottom: 0.25rem;
-    }
-
-    .log-header .log-date {
-      font-size: 0.875rem;
-      color: #6b7280;
-    }
-
-    .log-card {
+    /* Action cards */
+    .action-card {
       background: #111418;
       border: 1px solid #1e2329;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      overflow: hidden;
+      border-radius: 6px;
+      padding: 1.25rem 1.25rem 1.25rem 1rem;
+      margin-bottom: 1.25rem;
     }
 
-    .log-card-title {
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #6b7280;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid #1e2329;
-      background: #0d1014;
-    }
+    .action-card-issue  { border-left: 6px solid #ef4444; }
+    .action-card-progress { border-left: 6px solid #22c55e; }
+    .action-card-rfi    { border-left: 6px solid #f5a623; }
 
-    .log-card-body {
-      padding: 1rem;
-    }
-
-    .meta-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-
-    .meta-item label {
-      display: block;
-      font-size: 0.6875rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #6b7280;
-      margin-bottom: 0.25rem;
-    }
-
-    .meta-item span {
-      font-size: 0.9375rem;
-      color: #e8eaed;
-    }
-
-    .empty {
-      font-size: 0.875rem;
-      color: #6b7280;
-      font-style: italic;
-    }
-
-    .work-item {
-      padding: 0.75rem 0;
-      border-bottom: 1px solid #1e2329;
-    }
-
-    .work-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .work-item:first-child { padding-top: 0; }
-
-    .work-area {
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #f5a623;
-      margin-bottom: 0.25rem;
-    }
-
-    .work-desc {
-      font-size: 0.9375rem;
-      line-height: 1.5;
-      color: #e8eaed;
-    }
-
-    .issue-row {
+    .action-card-top {
       display: flex;
-      gap: 0.75rem;
       align-items: flex-start;
-      padding: 0.75rem 0;
-      border-bottom: 1px solid #1e2329;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
     }
 
-    .issue-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .issue-row:first-child { padding-top: 0; }
+    .action-title {
+      font-size: 1.125rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      color: #e8eaed;
+      line-height: 1.2;
+    }
 
-    .priority {
+    .action-badge {
       flex-shrink: 0;
       font-size: 0.625rem;
       font-weight: 800;
-      letter-spacing: 0.06em;
-      padding: 0.2rem 0.45rem;
+      letter-spacing: 0.08em;
+      padding: 0.3rem 0.5rem;
       border-radius: 4px;
     }
 
-    .priority-HIGH   { background: rgba(239,68,68,0.2);  color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
-    .priority-MEDIUM { background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); }
-    .priority-LOW    { background: rgba(107,114,128,0.25); color: #9ca3af; border: 1px solid rgba(107,114,128,0.35); }
+    .badge-HIGH   { background: rgba(239,68,68,0.25);  color: #f87171; border: 1px solid #ef4444; }
+    .badge-MEDIUM { background: rgba(245,158,11,0.25); color: #fbbf24; border: 1px solid #f59e0b; }
+    .badge-LOW    { background: rgba(34,197,94,0.2);  color: #4ade80; border: 1px solid #22c55e; }
 
-    .issue-desc {
-      font-size: 0.9375rem;
-      line-height: 1.5;
-      color: #e8eaed;
+    .action-field {
+      margin-bottom: 1rem;
     }
 
-    .steps-list {
-      list-style: none;
+    .action-field:last-child {
+      margin-bottom: 0;
     }
 
-    .steps-list li {
-      position: relative;
-      padding: 0.5rem 0 0.5rem 1.25rem;
-      font-size: 0.9375rem;
-      line-height: 1.5;
-      border-bottom: 1px solid #1e2329;
-    }
-
-    .steps-list li:last-child { border-bottom: none; }
-
-    .steps-list li::before {
-      content: '›';
-      position: absolute;
-      left: 0;
-      color: #f5a623;
+    .action-label {
+      font-size: 0.625rem;
       font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #6b7280;
+      margin-bottom: 0.35rem;
     }
 
-    .raw-notes {
+    .action-value {
+      font-family: 'Courier New', Courier, monospace;
       font-size: 0.9375rem;
-      line-height: 1.6;
-      color: #d1d5db;
+      line-height: 1.55;
+      color: #e8eaed;
       white-space: pre-wrap;
+      word-break: break-word;
     }
   </style>
 </head>
@@ -416,65 +334,24 @@
 
     <!-- Transcript -->
     <section id="panel-transcript" class="panel">
-      <p class="section-label">Transcript</p>
+      <div id="transcript-section">
+        <p class="section-label">Transcript</p>
+        <div class="transcript-box" id="transcript-text"></div>
+      </div>
       <div class="error-banner" id="error-banner"></div>
-      <div class="transcript-box" id="transcript-text"></div>
-      <button type="button" class="btn btn-primary" id="structure-btn">Structure into Daily Log</button>
+      <button type="button" class="btn btn-primary" id="structure-btn">Structure Field Note</button>
       <button type="button" class="btn btn-secondary" id="rerecord-btn">Record Again</button>
     </section>
 
     <!-- Structuring -->
     <section id="panel-structuring" class="panel">
       <div class="spinner"></div>
-      <p class="structuring-text">Structuring your daily log…</p>
+      <p class="structuring-text">BLDR is classifying your note...</p>
     </section>
 
-    <!-- Daily log -->
-    <section id="panel-log" class="panel">
-      <div class="log-header">
-        <h1 id="log-project">Daily Field Log</h1>
-        <p class="log-date" id="log-date"></p>
-      </div>
-
-      <div class="log-card">
-        <div class="log-card-title">Overview</div>
-        <div class="log-card-body">
-          <div class="meta-grid">
-            <div class="meta-item">
-              <label>Weather</label>
-              <span id="log-weather">—</span>
-            </div>
-            <div class="meta-item">
-              <label>Crew</label>
-              <span id="log-crew">—</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="log-card">
-        <div class="log-card-title">Work Completed</div>
-        <div class="log-card-body" id="log-work"></div>
-      </div>
-
-      <div class="log-card">
-        <div class="log-card-title">Issues</div>
-        <div class="log-card-body" id="log-issues"></div>
-      </div>
-
-      <div class="log-card">
-        <div class="log-card-title">Next Steps</div>
-        <div class="log-card-body" id="log-next"></div>
-      </div>
-
-      <div class="log-card" id="card-raw-notes" style="display:none;">
-        <div class="log-card-title">Additional Notes</div>
-        <div class="log-card-body">
-          <p class="raw-notes" id="log-raw-notes"></p>
-        </div>
-      </div>
-
-      <button type="button" class="btn btn-primary" id="new-log-btn" style="margin-top:0.5rem;">New Recording</button>
+    <!-- Action result -->
+    <section id="panel-action" class="panel">
+      <div id="action-card-root"></div>
     </section>
   </main>
 
@@ -488,7 +365,7 @@
       record: document.getElementById('panel-record'),
       transcript: document.getElementById('panel-transcript'),
       structuring: document.getElementById('panel-structuring'),
-      log: document.getElementById('panel-log'),
+      action: document.getElementById('panel-action'),
     };
 
     const micBtn = document.getElementById('mic-btn');
@@ -498,7 +375,8 @@
     const errorBanner = document.getElementById('error-banner');
     const structureBtn = document.getElementById('structure-btn');
     const rerecordBtn = document.getElementById('rerecord-btn');
-    const newLogBtn = document.getElementById('new-log-btn');
+    const transcriptSection = document.getElementById('transcript-section');
+    const actionCardRoot = document.getElementById('action-card-root');
 
     let mediaRecorder = null;
     let audioChunks = [];
@@ -534,9 +412,89 @@
         .replace(/"/g, '&quot;');
     }
 
-    function fmt(value) {
-      if (value == null || value === '') return '<span class="empty">Not noted</span>';
-      return esc(value);
+    function resetToRecord() {
+      hideError();
+      transcriptText.textContent = '';
+      transcriptSection.style.display = '';
+      structureBtn.style.display = '';
+      rerecordBtn.style.display = '';
+      actionCardRoot.innerHTML = '';
+      setStatus('Ready');
+      showPanel('record');
+    }
+
+    function badgeHtml(level) {
+      const p = (level || 'LOW').toUpperCase();
+      return `<span class="action-badge badge-${p}">${esc(p)}</span>`;
+    }
+
+    function fieldHtml(label, value) {
+      const display = value != null && String(value).trim() !== '' ? esc(value) : '—';
+      return `<div class="action-field">
+        <div class="action-label">${esc(label)}</div>
+        <div class="action-value">${display}</div>
+      </div>`;
+    }
+
+    function renderActionCard(data) {
+      let cardClass = 'action-card';
+      let title = '';
+      let badge = '';
+      let fields = '';
+
+      if (data.type === 'issue') {
+        cardClass += ' action-card-issue';
+        title = '⚠ ISSUE LOGGED';
+        badge = badgeHtml(data.priority);
+        fields = [
+          fieldHtml('Date', data.date),
+          fieldHtml('Area', data.area),
+          fieldHtml('Description', data.description),
+          fieldHtml('Impact', data.impact),
+          fieldHtml('Recommended Action', data.recommended_action),
+          fieldHtml('Logged By', data.logged_by),
+        ].join('');
+      } else if (data.type === 'progress') {
+        cardClass += ' action-card-progress';
+        title = '✓ PROGRESS LOGGED';
+        fields = [
+          fieldHtml('Date', data.date),
+          fieldHtml('Area', data.area),
+          fieldHtml('Work Completed', data.work_completed),
+          fieldHtml('Crew', data.crew),
+          fieldHtml('Notes', data.notes),
+          fieldHtml('Logged By', data.logged_by),
+        ].join('');
+      } else if (data.type === 'rfi') {
+        cardClass += ' action-card-rfi';
+        title = '? RFI PREPARED';
+        badge = badgeHtml(data.urgency);
+        fields = [
+          fieldHtml('Date', data.date),
+          fieldHtml('Subject', data.subject),
+          fieldHtml('Question', data.question),
+          fieldHtml('Area Affected', data.area_affected),
+          fieldHtml('Urgency', data.urgency),
+          fieldHtml('Requested By', data.requested_by),
+          fieldHtml('Notes', data.notes),
+        ].join('');
+      } else {
+        actionCardRoot.innerHTML = `<div class="error-banner visible">Unknown action type: ${esc(data.type)}</div>`;
+        return;
+      }
+
+      actionCardRoot.innerHTML = `
+        <div class="${cardClass}">
+          <div class="action-card-top">
+            <h2 class="action-title">${title}</h2>
+            ${badge}
+          </div>
+          ${fields}
+        </div>
+        <button type="button" class="btn btn-primary" id="record-another-btn">Record Another</button>
+      `;
+
+      document.getElementById('record-another-btn').addEventListener('click', resetToRecord);
     }
 
     async function ensureMic() {
@@ -625,7 +583,7 @@
       showPanel('structuring');
 
       try {
-        const res = await fetch('/api/structure-transcript', {
+        const res = await fetch('/api/structure-action', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -635,90 +593,21 @@
         });
 
         const data = await res.json();
-        if (!res.ok) {
+        if (!res.ok || data.error) {
           throw new Error(data.error || 'Structuring failed');
         }
 
-        const log = data.log || data;
-        renderLog(log);
-        showPanel('log');
+        renderActionCard(data);
+        showPanel('action');
       } catch (err) {
         showPanel('transcript');
-        showError(err.message || 'Could not structure log');
+        showError(err.message || 'Could not structure note');
       } finally {
         structureBtn.disabled = false;
       }
     });
 
-    function renderLog(log) {
-      document.getElementById('log-project').textContent = log.project || 'Daily Field Log';
-      document.getElementById('log-date').textContent = log.date || '';
-      document.getElementById('log-weather').innerHTML = fmt(log.weather);
-      document.getElementById('log-crew').innerHTML = fmt(log.crew_count);
-
-      const workEl = document.getElementById('log-work');
-      const work = Array.isArray(log.work_completed) ? log.work_completed : [];
-      if (work.length === 0) {
-        workEl.innerHTML = '<p class="empty">No work items noted</p>';
-      } else {
-        workEl.innerHTML = work.map((item) => {
-          if (typeof item === 'string') {
-            return `<div class="work-item"><div class="work-desc">${esc(item)}</div></div>`;
-          }
-          const area = item.area ? `<div class="work-area">${esc(item.area)}</div>` : '';
-          return `<div class="work-item">${area}<div class="work-desc">${esc(item.description)}</div></div>`;
-        }).join('');
-      }
-
-      const issuesEl = document.getElementById('log-issues');
-      const issues = Array.isArray(log.issues) ? log.issues : [];
-      if (issues.length === 0) {
-        issuesEl.innerHTML = '<p class="empty">No issues logged</p>';
-      } else {
-        const order = { HIGH: 0, MEDIUM: 1, LOW: 2 };
-        const sorted = [...issues].sort(
-          (a, b) => (order[a.priority] ?? 3) - (order[b.priority] ?? 3)
-        );
-        issuesEl.innerHTML = sorted.map((item) => {
-          const pri = (item.priority || 'LOW').toUpperCase();
-          return `<div class="issue-row">
-            <span class="priority priority-${pri}">${esc(pri)}</span>
-            <span class="issue-desc">${esc(item.description || item)}</span>
-          </div>`;
-        }).join('');
-      }
-
-      const nextEl = document.getElementById('log-next');
-      const steps = Array.isArray(log.next_steps) ? log.next_steps : [];
-      if (steps.length === 0) {
-        nextEl.innerHTML = '<p class="empty">No follow-up items noted</p>';
-      } else {
-        nextEl.innerHTML = `<ul class="steps-list">${steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>`;
-      }
-
-      const rawCard = document.getElementById('card-raw-notes');
-      const rawNotes = log.raw_notes && String(log.raw_notes).trim();
-      if (rawNotes) {
-        document.getElementById('log-raw-notes').textContent = rawNotes;
-        rawCard.style.display = 'block';
-      } else {
-        rawCard.style.display = 'none';
-      }
-    }
-
-    rerecordBtn.addEventListener('click', () => {
-      hideError();
-      transcriptText.textContent = '';
-      setStatus('Ready');
-      showPanel('record');
-    });
-
-    newLogBtn.addEventListener('click', () => {
-      hideError();
-      transcriptText.textContent = '';
-      setStatus('Ready');
-      showPanel('record');
-    });
+    rerecordBtn.addEventListener('click', resetToRecord);
   </script>
 </body>
 </html>
