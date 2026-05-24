@@ -115,6 +115,36 @@
       transform: scale(0.98);
     }
 
+    .log-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 360px;
+      min-height: 64px;
+      padding: 1.25rem 2rem;
+      background: transparent;
+      color: #9ca3af;
+      border: 2px solid #3d4450;
+      border-radius: 10px;
+      font-size: 1.125rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.1s;
+      margin-bottom: 1.25rem;
+    }
+
+    .log-btn:hover {
+      background: #111418;
+      border-color: #6b7280;
+      color: #e8eaed;
+    }
+
+    .log-btn:active {
+      transform: scale(0.98);
+    }
+
     .subtitle {
       font-size: 0.9375rem;
       color: #6b7280;
@@ -135,6 +165,7 @@
   <main>
     <h1>What do you need to do?</h1>
     <a href="/record.html" class="record-btn">🎙 Record Field Note</a>
+    <a href="/log.html" class="log-btn">📋 Today's Log</a>
     <p class="subtitle">Speak naturally — BLDR will figure out the rest</p>
   </main>
 
