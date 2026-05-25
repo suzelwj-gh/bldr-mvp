@@ -21,6 +21,7 @@ function sendDocx(res, buffer, filename) {
 router.post('/daily-report', requireAuth, (req, res) => {
   try {
     const body = req.body || {};
+    console.log('Daily report DOCX request body:', body);
     const buffer = generateDoc('BLDR_Daily_Construction_Report.docx', body);
     const date = safePart(body.date, 'today');
     sendDocx(res, buffer, `daily-report-${date}.docx`);

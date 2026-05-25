@@ -204,7 +204,7 @@
       const rfiNotes = notes.filter((note) => note.type === 'rfi').map((note) => note.structured || {});
       const crews = [...new Set(progressNotes.map((note) => note.crew).filter(Boolean))];
 
-      return {
+      const body = {
         project_name: localStorage.getItem('project') || '',
         job_number: '',
         superintendent: localStorage.getItem('name') || 'Superintendent',
@@ -241,6 +241,9 @@
         title: 'Superintendent',
         completed_date: date
       };
+
+      console.log('Daily report DOCX payload:', body);
+      return body;
     }
 
     document.getElementById('wrapUpBtn').addEventListener('click', async () => {
