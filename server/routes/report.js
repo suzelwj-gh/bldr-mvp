@@ -1,99 +1,28 @@
-const express = require('express');
-const router = express.Router();
-const { requireAuth } = require('../middleware/auth');
-const { Pool } = require('pg');
-const PDFDocument = require('pdfkit');
-const nodemailer = require('nodemailer');
+const express=require('express'),router=express.Router(),{requireAuth}=require('../middleware/auth'),{Pool}=require('pg'),PDFDocument=require('pdfkit'),nodemailer=require('nodemailer'),pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
+function getT(){return nodemailer.createTransport({host:process.env.SMTP_HOST,port:587,secure:false,auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS}});}
 
-function getTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-}
+async function buildPDF(user,notes){return new Promise((resolve,reject)=>{const doc=new PDFDocument({margin:50,size:'LETTER'});const chunks=[];doc.on('data',c=>chunks.push(c));doc.on('end',()=>resolve(Buffer.concat(chunks)));doc.on('error',reject);const pw=doc.page.width-100;const today=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
-async function buildPDF(user, notes) {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 50, size: 'LETTER' });
-    const chunks = [];
-    doc.on('data', chunk => chunks.push(chunk));
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
-    doc.on('error', reject);
+doc.rect(0,0,doc.page.width,90).fill('#1B2E4B');doc.fontSize(26).fillColor('#E8651A').font('Helvetica-Bold').text('BLDR',50,20);doc.fontSize(10).fillColor('white').font('Helvetica').text('Daily Field Report',50,50);doc.fontSize(10).fillColor('white').text(today,50,65);doc.fontSize(10).fillColor('white').font('Helvetica-Bold').text(user.name,0,30,{align:'right',width:doc.page.width-50});doc.fontSize(10).fillColor('white').font('Helvetica').text(user.project,0,46,{align:'right',width:doc.page.width-50});
 
-    const pageWidth = doc.page.width - 100;
-    const today = new Date().toLocaleDateString('en-US', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
+const tc={};notes.forEach(n=>{tc[n.type]=(tc[n.type]||0)+1;});const sy=110,bw=pw/4;['issue','progress','rfi','other'].forEach((type,i)=>{const x=50+i*bw,count=tc[type]||0;const colors={issue:'#DC2626',progress:'#16A34A',rfi:'#1B2E4B',other:'#4B5563'};const labels={issue:'Issues',progress:'Progress',rfi:'RFIs',other:'Other'};doc.rect(x,sy,bw-4,54).fill(count>0?colors[type]:'#F5F6F8');doc.fontSize(24).fillColor(count>0?'white':'#4B5563').font('Helvetica-Bold').text(String(count),x,sy+6,{width:bw-4,align:'center'});doc.fontSize(9).fillColor(count>0?'white':'#4B5563').font('Helvetica').text(labels[type],x,sy+36,{width:bw-4,align:'center'});});
 
-    // Header
-    doc.rect(0, 0, doc.page.width, 90).fill('#1B2E4B');
-    doc.fontSize(26).fillColor('#E8651A').font('Helvetica-Bold').text('BLDR', 50, 20);
-    doc.fontSize(10).fillColor('white').font('Helvetica').text('Daily Field Report', 50, 50);
-    doc.fontSize(10).fillColor('white').text(today, 50, 65);
-    doc.fontSize(10).fillColor('white').font('Helvetica-Bold')
-       .text(user.name, 0, 30, { align: 'right', width: doc.page.width - 50 });
-    doc.fontSize(10).fillColor('white').font('Helvetica')
-       .text(user.project, 0, 46, { align: 'right', width: doc.page.width - 50 });
+let y=sy+74;for(const type of ['issue','progress','rfi']){const tn=notes.filter(n=>n.type===type);if(!tn.length)continue;if(y>doc.page.height-150){doc.addPage();y=50;}const sl={issue:'ISSUES',progress:'PROGRESS NOTES',rfi:'RFIs'};doc.rect(50,y,pw,22).fill('#1B2E4B');doc.fontSize(10).fillColor('white').font('Helvetica-Bold').text(sl[type],58,y+6);y+=30;
 
-    // Summary boxes
-    const typeCounts = {};
-    notes.forEach(n => { typeCounts[n.type] = (typeCounts[n.type] || 0) + 1; });
-    const summaryY = 110;
-    const boxW = pageWidth / 4;
-    const types = ['issue', 'progress', 'rfi', 'other'];
-    const labels = { issue: 'Issues', progress: 'Progress', rfi: 'RFIs', other: 'Other' };
-    const colors = { issue: '#DC2626', progress: '#16A34A', rfi: '#1B2E4B', other: '#4B5563' };
+for(const note of tn){if(y>doc.page.height-200){doc.addPage();y=50;}const s=note.structured||{};const time=new Date(note.createdAt||note.created_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});doc.rect(50,y,pw,2).fill('#F5F6F8');y+=6;doc.fontSize(8).fillColor('#4B5563').font('Helvetica').text(time,50,y);if(s.area)doc.fontSize(8).fillColor('#4B5563').text(s.area,110,y);
 
-    types.forEach((type, i) => {
-      const x = 50 + i * boxW;
-      const count = typeCounts[type] || 0;
-      doc.rect(x, summaryY, boxW - 4, 54).fill(count > 0 ? colors[type] : '#F5F6F8');
-      doc.fontSize(24).fillColor(count > 0 ? 'white' : '#4B5563').font('Helvetica-Bold')
-         .text(String(count), x, summaryY + 6, { width: boxW - 4, align: 'center' });
-      doc.fontSize(9).fillColor(count > 0 ? 'white' : '#4B5563').font('Helvetica')
-         .text(labels[type], x, summaryY + 36, { width: boxW - 4, align: 'center' });
-    });
+if(type==='issue'&&s.priority){const bc=s.priority==='HIGH'?'#DC2626':s.priority==='MEDIUM'?'#D97706':'#16A34A';doc.rect(doc.page.width-100,y-1,50,14).fill(bc);doc.fontSize(8).fillColor('white').font('Helvetica-Bold').text(s.priority,doc.page.width-98,y+2);}y+=14;
 
-    let y = summaryY + 74;
+const mt=s.description||s.work_completed||s.question||note.rawTranscript||'No details.';doc.fontSize(10).fillColor('#111827').font('Helvetica').text(mt,50,y,{width:pw,lineGap:2});y+=doc.heightOfString(mt,{width:pw})+6;
 
-    // Notes by type
-    const typeOrder = ['issue', 'progress', 'rfi'];
-    const sectionLabels = { issue: 'ISSUES', progress: 'PROGRESS NOTES', rfi: 'RFIs' };
+for(const [label,value] of [['Impact',s.impact],['Action',s.recommended_action],['Crew',s.crew],['Notes',s.notes]]){if(!value)continue;if(y>doc.page.height-100){doc.addPage();y=50;}doc.fontSize(9).fillColor('#4B5563').font('Helvetica-Bold').text(label+': ',58,y,{continued:true});doc.font('Helvetica').text(value,{width:pw-8});y+=doc.heightOfString(value,{width:pw-8})+2;}y+=10;doc.rect(50,y,pw,1).fill('#E5E7EB');y+=10;}}
 
-    for (const type of typeOrder) {
-      const typeNotes = notes.filter(n => n.type === type);
-      if (typeNotes.length === 0) continue;
+const fy=doc.page.height-40;doc.rect(0,fy-10,doc.page.width,50).fill('#F5F6F8');doc.fontSize(8).fillColor('#4B5563').font('Helvetica').text('Generated by BLDR - '+user.name+' - '+user.project,50,fy,{align:'center',width:pw});doc.end();});}
 
-      if (y > doc.page.height - 150) { doc.addPage(); y = 50; }
+router.post('/daily',requireAuth,async(req,res)=>{const user=req.user;try{const result=await pool.query('SELECT id,type,structured,raw_transcript,created_at FROM notes WHERE user_id=\ AND created_at::date=NOW()::date ORDER BY created_at ASC',[user.id]);const notes=result.rows.map(r=>({id:r.id,type:r.type,structured:r.structured,rawTranscript:r.raw_transcript,createdAt:r.created_at}));if(!notes.length)return res.status(400).json({error:'No notes logged today.'});
 
-      doc.rect(50, y, pageWidth, 22).fill('#1B2E4B');
-      doc.fontSize(10).fillColor('white').font('Helvetica-Bold')
-         .text(sectionLabels[type], 58, y + 6);
-      y += 30;
+const pdfBuffer=await buildPDF(user,notes);const today=new Date().toLocaleDateString('en-US',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');const filename='BLDR_Report_'+user.name.replace(/\s+/g,'_')+'_'+today+'.pdf';const pmEmail=user.pmEmail||user.email;await getT().sendMail({from:'BLDR <'+process.env.SMTP_USER+'>',to:pmEmail,subject:'Daily Report - '+today,text:'Report from '+user.name,attachments:[{filename,content:pdfBuffer,contentType:'application/pdf'}]});
 
-      for (const note of typeNotes) {
-        if (y > doc.page.height - 200) { doc.addPage(); y = 50; }
-
-        const s = note.structured || {};
-        const time = new Date(note.createdAt || note.created_at)
-          .toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-        doc.rect(50, y, pageWidth, 2).fill('#F5F6F8');
-        y += 6;
-
-        doc.fontSize(8).fillColor('#4B5563').font('Helvetica').text(time, 50, y);
-        if (s.area) doc.fontSize(8).fillColor('#4B5563').text(`  ${s.area}`, 110, y);
-
-        if (type === 'issue' && s.priority) {
-          const badgeColor = s.priority === 'HIGH' ? '#DC2626' : s.priority === 'MEDIUM' ? '#D97706' : '#16A34A';
-          doc.rect(doc.page.width - 100, y - 1, 50, 1
+res.setHeader('Content-Type','application/pdf');res.setHeader('Content-Disposition','attachment; filename='+filename);res.send(pdfBuffer);}catch(err){console.error('Report error:',err);res.status(500).json({error:'Failed to generate report.'});}});
+module.exports=router;
