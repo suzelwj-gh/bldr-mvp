@@ -115,7 +115,7 @@
       transform: scale(0.98);
     }
 
-    .log-btn {
+    .wrapup-btn { display: flex; align-items: center; justify-content: center; width: 100%; max-width: 360px; min-height: 64px; padding: 1.25rem 2rem; background: #2563eb; color: white; border: none; border-radius: 10px; font-size: 1.25rem; font-weight: 800; cursor: pointer; transition: background 0.2s; margin-bottom: 1rem; } .wrapup-btn:hover { background: #1d4ed8; } .log-btn {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -165,7 +165,7 @@
   <main>
     <h1>What do you need to do?</h1>
     <a href="/record.html" class="record-btn">🎙 Record Field Note</a>
-    <a href="/log.html" class="log-btn">📋 Today's Log</a>
+    <button id="wrapUpBtn" class="wrapup-btn">?? Wrap Up My Day</button><a href="/log.html" class="log-btn">📋 Today's Log</a>
     <p class="subtitle">Speak naturally — BLDR will figure out the rest</p>
   </main>
 
@@ -179,7 +179,7 @@
     const name = localStorage.getItem('name') || 'User';
     document.getElementById('userName').textContent = name;
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
+    document.getElementById('wrapUpBtn').addEventListener('click', async () => { const token = localStorage.getItem('token'); if (!token) { window.location.href = '/login.html'; return; } const btn = document.getElementById('wrapUpBtn'); btn.textContent = 'Generating...'; btn.disabled = true; try { const res = await fetch('/api/report/daily', { method: 'POST', headers: { Authorization: 'Bearer ' + token } }); if (!res.ok) { const err = await res.json(); alert(err.error || 'Failed'); } else { const blob = await res.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'BLDR_Report.pdf'; a.click(); alert('Report sent to your PM!'); } } catch(e) { alert('Error'); } btn.textContent = 'Wrap Up My Day'; btn.disabled = false; }); document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.removeItem('token');
       localStorage.removeItem('name');
       localStorage.removeItem('role');
@@ -188,3 +188,6 @@
   </script>
 </body>
 </html>
+
+
+
