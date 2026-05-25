@@ -1,6 +1,6 @@
 const express=require('express'),router=express.Router(),{requireAuth}=require('../middleware/auth'),{Pool}=require('pg'),PDFDocument=require('pdfkit'),nodemailer=require('nodemailer'),pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});
 
-function getT(){return nodemailer.createTransport({host:process.env.SMTP_HOST,port:587,secure:false,auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS}});}
+function getT(){return nodemailer.createTransport({host:process.env.SMTP_HOST,port:465,secure:true,auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS}});}
 
 async function buildPDF(user,notes){return new Promise((resolve,reject)=>{const doc=new PDFDocument({margin:50,size:'LETTER'});const chunks=[];doc.on('data',c=>chunks.push(c));doc.on('end',()=>resolve(Buffer.concat(chunks)));doc.on('error',reject);const pw=doc.page.width-100;const today=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
@@ -26,6 +26,7 @@ const pdfBuffer=await buildPDF(user,notes);const today=new Date().toLocaleDateSt
 
 res.setHeader('Content-Type','application/pdf');res.setHeader('Content-Disposition','attachment; filename='+filename);res.send(pdfBuffer);}catch(err){console.error('Report error:',err);res.status(500).json({error:'Failed to generate report.'});}});
 module.exports=router;
+
 
 
 
