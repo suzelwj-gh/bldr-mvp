@@ -165,7 +165,7 @@
   <main>
     <h1>What do you need to do?</h1>
     <a href="/record.html" class="record-btn">🎙 Record Field Note</a>
-    <button id="wrapUpBtn" class="wrapup-btn">?? Wrap Up My Day</button><a href="/log.html" class="log-btn">📋 Today's Log</a>
+    <button id="wrapUpBtn" class="wrapup-btn">📄 Wrap Up My Day</button><a href="/log.html" class="log-btn">📋 Today's Log</a>
     <p class="subtitle">Speak naturally — BLDR will figure out the rest</p>
   </main>
 
@@ -179,7 +179,125 @@
     const name = localStorage.getItem('name') || 'User';
     document.getElementById('userName').textContent = name;
 
-    document.getElementById('wrapUpBtn').addEventListener('click', async () => { const token = localStorage.getItem('token'); if (!token) { window.location.href = '/login.html'; return; } const btn = document.getElementById('wrapUpBtn'); btn.textContent = 'Generating...'; btn.disabled = true; try { const res = await fetch('/api/report/daily', { method: 'POST', headers: { Authorization: 'Bearer ' + token } }); if (!res.ok) { const err = await res.json(); alert(err.error || 'Failed'); } else { const blob = await res.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'BLDR_Report.pdf'; a.click(); alert('Report sent to your PM!'); } } catch(e) { alert('Error'); } btn.textContent = 'Wrap Up My Day'; btn.disabled = false; }); document.getElementById('logoutBtn').addEventListener('click', () => {
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function todayParts() {
+      const now = new Date();
+      const date = now.toISOString().slice(0, 10);
+      const day = now.toLocaleDateString('en-US', { weekday: 'long' });
+      return { date, day };
+    }
+
+    function buildDailyReportBody(notes) {
+      const { date, day } = todayParts();
+      const progressNotes = notes.filter((note) => note.type === 'progress').map((note) => note.structured || {});
+      const issueNotes = notes.filter((note) => note.type === 'issue').map((note) => note.structured || {});
+      const rfiNotes = notes.filter((note) => note.type === 'rfi').map((note) => note.structured || {});
+      const crews = [...new Set(progressNotes.map((note) => note.crew).filter(Boolean))];
+
+      return {
+        project_name: localStorage.getItem('project') || '',
+        job_number: '',
+        superintendent: localStorage.getItem('name') || 'Superintendent',
+        date,
+        day,
+        project_address: '',
+        temp_am: '',
+        temp_pm: '',
+        weather_clear: '',
+        weather_cloudy: '',
+        weather_rain: '',
+        weather_wind: '',
+        weather_other: '',
+        rain_am: '',
+        rain_pm: '',
+        site_conditions: '',
+        logistical_changes: '',
+        general_notes: notes.map((note) => note.rawTranscript).filter(Boolean).join('\n\n'),
+        work_accomplished: progressNotes.map((note) => `${note.area || 'Area not specified'}: ${note.work_completed || note.notes || ''}`).join('\n'),
+        work_started: '',
+        issues_encountered: issueNotes.map((note) => `${note.area || 'Area not specified'}: ${note.description || ''}${note.impact ? ` Impact: ${note.impact}` : ''}${note.recommended_action ? ` Recommended action: ${note.recommended_action}` : ''}`).join('\n'),
+        trade_contractors: crews,
+        tier2_contractors: [],
+        temp_laborers: [],
+        visitors: [],
+        equipment: [],
+        deliveries: [],
+        safety_issues: issueNotes.filter((note) => /safety|hazard|injury|danger/i.test(`${note.description || ''} ${note.impact || ''}`)).map((note) => note.description).join('\n'),
+        material_issues: issueNotes.filter((note) => /material|delivery|shortage|supply/i.test(`${note.description || ''} ${note.impact || ''}`)).map((note) => note.description).join('\n'),
+        rfi_design_issues: rfiNotes.map((note) => `${note.subject || 'RFI'}: ${note.question || ''}`).join('\n'),
+        tm_work: [],
+        progress_photos: [],
+        completed_by: localStorage.getItem('name') || 'Superintendent',
+        title: 'Superintendent',
+        completed_date: date
+      };
+    }
+
+    document.getElementById('wrapUpBtn').addEventListener('click', async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      const btn = document.getElementById('wrapUpBtn');
+      btn.textContent = 'Generating...';
+      btn.disabled = true;
+
+      try {
+        const notesRes = await fetch('/api/notes/today', {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        const notesData = await notesRes.json();
+        if (!notesRes.ok) throw new Error(notesData.error || 'Failed to fetch notes.');
+
+        const notes = notesData.notes || [];
+        const reportBody = buildDailyReportBody(notes);
+        const docxRes = await fetch('/api/documents/daily-report', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + token
+          },
+          body: JSON.stringify(reportBody)
+        });
+        if (!docxRes.ok) {
+          const err = await docxRes.json();
+          throw new Error(err.error || 'Failed to generate DOCX.');
+        }
+        const docxBlob = await docxRes.blob();
+        downloadBlob(docxBlob, `daily-report-${reportBody.date}.docx`);
+
+        const pdfRes = await fetch('/api/report/daily', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        if (!pdfRes.ok) {
+          const err = await pdfRes.json();
+          throw new Error(err.error || 'Failed to generate PDF.');
+        }
+        const pdfBlob = await pdfRes.blob();
+        downloadBlob(pdfBlob, 'BLDR_Report.pdf');
+        alert('DOCX and PDF reports downloaded.');
+      } catch (err) {
+        alert(err.message || 'Error');
+      } finally {
+        btn.textContent = '📄 Wrap Up My Day';
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.removeItem('token');
       localStorage.removeItem('name');
       localStorage.removeItem('role');
