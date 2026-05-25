@@ -12,6 +12,7 @@ const pool = new Pool({
 });
 const authRouter = require('./routes/auth');
 const reportRouter = require('./routes/report');
+const documentsRouter = require('./routes/documents');
 const { requireAuth } = require('./middleware/auth');
 const authenticateToken = requireAuth;
 const transcribeRouter = require('./routes/transcribe');
@@ -26,6 +27,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.use('/api/auth', authRouter);
 app.use('/api/report', reportRouter);
+app.use('/api/documents', documentsRouter);
 app.use('/api/transcribe', transcribeRouter(upload));
 
 app.get('/api/health', (req, res) => {
