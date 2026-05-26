@@ -14,7 +14,7 @@ router.post('/login', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT id, email, password_hash, role, name FROM users WHERE email = $1',
+      'SELECT id, email, password_hash, role, name, project FROM users WHERE email = $1',
       [email]
     );
 
@@ -30,7 +30,7 @@ router.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { id: user.id, email: user.email, role: user.role, name: user.name, project: user.project },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -47,3 +47,4 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
+
