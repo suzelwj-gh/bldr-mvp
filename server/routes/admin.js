@@ -65,16 +65,16 @@ router.get('/token-usage', requireAuth, adminOnly, async (req, res) => {
     const result = await pool.query(`
       SELECT
         u.username,
-        t.client_id,
-        t.action,
-        SUM(t.tokens_in)::int AS total_in,
-        SUM(t.tokens_out)::int AS total_out,
+        u.email AS client_id,
+        'transcribe' AS action,
+        SUM(t.tokens_used)::int AS total_in,
+        0::int AS total_out,
         COUNT(*)::int AS calls,
-        t.created_at::date AS day
+        t.date AS day
       FROM token_usage t
       JOIN users u ON t.user_id = u.id
-      WHERE t.created_at >= NOW() - INTERVAL '14 days'
-      GROUP BY t.client_id, u.username, t.action, t.created_at::date
+      WHERE t.date >= CURRENT_DATE - INTERVAL '14 days'
+      GROUP BY u.username, u.email, t.date
       ORDER BY day DESC
     `);
     res.json(result.rows);
@@ -89,12 +89,13 @@ router.get('/billing', requireAuth, adminOnly, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        t.client_id,
-        SUM(t.tokens_in)::int AS total_in,
-        SUM(t.tokens_out)::int AS total_out,
+        u.email AS client_id,
+        SUM(t.tokens_used)::int AS total_in,
+        0::int AS total_out,
         COUNT(*)::int AS total_calls
       FROM token_usage t
-      GROUP BY t.client_id
+      JOIN users u ON t.user_id = u.id
+      GROUP BY u.email
     `);
     const rows = result.rows.map(row => ({
       ...row,
