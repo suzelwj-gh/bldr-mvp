@@ -1,15 +1,12 @@
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
 const { generateDoc } = require('../utils/generateDoc');
+const pool = require('../utils/db');
 
 const router = express.Router();
 
 function safePart(value, fallback) {
-  return String(value || fallback)
-    .trim()
-    .replace(/[^a-z0-9_-]+/gi, '-')
-    .replace(/^-+|-+$/g, '')
-    .toLowerCase();
+  return String(value || fallback).trim().replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase();
 }
 
 function sendDocx(res, buffer, filename) {
@@ -18,40 +15,80 @@ function sendDocx(res, buffer, filename) {
   res.send(buffer);
 }
 
-router.post('/daily-report', requireAuth, (req, res) => {
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function formatTime(d) {
+  return new Date(d).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+router.post('/daily-report', requireAuth, async (req, res) => {
   try {
-    const body = req.body || {};
-    console.log('Daily report DOCX request body:', body);
-    const buffer = generateDoc('BLDR_Daily_Construction_Report.docx', body);
-    const date = safePart(body.date, 'today');
-    sendDocx(res, buffer, `daily-report-${date}.docx`);
+    const user = req.user;
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    const notesResult = await pool.query(
+      `SELECT * FROM notes WHERE user_id = $1 AND DATE(created_at) = $2 ORDER BY created_at ASC`,
+      [user.id, todayStr]
+    );
+    const notes = notesResult.rows;
+
+    const issues = notes.filter(n => n.type === 'issue');
+    const progress = notes.filter(n => n.type === 'progress');
+    const rfis = notes.filter(n => n.type === 'rfi');
+
+    const issuesSummary = issues.length
+      ? issues.map((n, i) => `${i+1}. [${formatTime(n.created_at)}] ${n.content}`).join('\n')
+      : 'No issues reported.';
+
+    const workSummary = progress.length
+      ? progress.map((n, i) => `${i+1}. [${formatTime(n.created_at)}] ${n.content}`).join('\n')
+      : 'No progress notes recorded.';
+
+    const rfiSummary = rfis.length
+      ? rfis.map((n, i) => `${i+1}. [${formatTime(n.created_at)}] ${n.content}`).join('\n')
+      : 'No RFIs referenced today.';
+
+    const weatherNote = notes.find(n => n.content && /weather|temp|rain|sunny|cloudy|wind/i.test(n.content));
+
+    const data = {
+      project_name: user.project_name || 'BLDR Demo Project',
+      project_number: user.project_number || '2026-001',
+      date: formatDate(today),
+      day_of_week: DAYS[today.getDay()],
+      report_number: todayStr.replace(/-/g, ''),
+      superintendent_name: user.name || user.email,
+      pm_email: user.pm_email || '',
+      weather_am_temp: '',
+      weather_pm_temp: '',
+      weather_condition: weatherNote ? weatherNote.content : 'See notes',
+      weather_delay: 'No',
+      weather_delay_hours: '0',
+      site_conditions: 'Normal',
+      general_notes: notes.length ? `${notes.length} field note(s) recorded today.` : 'No notes recorded.',
+      work_accomplished: workSummary,
+      manpower_summary: 'See superintendent log.',
+      second_tier_summary: '',
+      temp_laborers: '',
+      visitors_summary: '',
+      equipment_summary: '',
+      deliveries_summary: '',
+      safety_issues: issuesSummary,
+      rfis_summary: rfiSummary,
+      tm_work: '',
+      progress_photos: '',
+      generated_at: new Date().toLocaleString('en-US'),
+    };
+
+    const buffer = generateDoc('BLDR_Daily_Construction_Report.docx', data);
+    sendDocx(res, buffer, `daily-report-${safePart(todayStr, 'today')}.docx`);
   } catch (err) {
     console.error('Daily report DOCX error:', err);
     res.status(500).json({ error: 'Failed to generate daily report.' });
-  }
-});
-
-router.post('/rfi', requireAuth, (req, res) => {
-  try {
-    const body = req.body || {};
-    const buffer = generateDoc('BLDR_RFI_Template.docx', body);
-    const rfiNumber = safePart(body.rfi_number || body.date_received || body.date_required, 'new');
-    sendDocx(res, buffer, `rfi-${rfiNumber}.docx`);
-  } catch (err) {
-    console.error('RFI DOCX error:', err);
-    res.status(500).json({ error: 'Failed to generate RFI.' });
-  }
-});
-
-router.post('/issue-tracker', requireAuth, (req, res) => {
-  try {
-    const body = req.body || {};
-    const buffer = generateDoc('BLDR_Issue_Tracker.docx', body);
-    const date = safePart(body.date || body.created_date || body.issue_date, 'today');
-    sendDocx(res, buffer, `issue-tracker-${date}.docx`);
-  } catch (err) {
-    console.error('Issue tracker DOCX error:', err);
-    res.status(500).json({ error: 'Failed to generate issue tracker.' });
   }
 });
 
