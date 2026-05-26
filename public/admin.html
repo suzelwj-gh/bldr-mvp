@@ -123,7 +123,8 @@
 
     .cost { color: #f39c12; font-size: 18px; }
 
-    .empty { color: #444; font-size: 13px; padding: 16px 0; }
+    .empty { color: #888; font-size: 13px; padding: 16px 0; }
+    .error-msg { color: #e74c3c; font-size: 13px; padding: 16px 0; font-weight: bold; }
 
     #loading {
       text-align: center;
@@ -277,7 +278,7 @@
           document.getElementById('dashboard').style.display = 'grid';
         } catch (err) {
           console.error('Admin dashboard error:', err);
-          document.getElementById('loading').textContent = 'FAILED TO LOAD ADMIN DASHBOARD';
+          document.getElementById('loading').innerHTML = '<span style="color:#e74c3c;font-size:14px;letter-spacing:2px;">⚠ ERROR LOADING DASHBOARD — open browser console (F12) for details</span>';
         }
       }
 
