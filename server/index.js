@@ -43,33 +43,62 @@ app.post('/api/structure-transcript', requireAuth, async (req, res) => {
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
-  const systemPrompt = `You are a construction field assistant. Your job is to take a raw voice transcript from a construction superintendent and structure it into a professional daily log.
+  const systemPrompt = `You are a construction field assistant. Your job is to take a raw voice transcript from a construction superintendent and extract structured data for a daily field log.
 
-Always respond with ONLY valid JSON — no preamble, no markdown, no explanation. Use exactly this structure:
+Always respond with ONLY valid JSON — no preamble, no markdown, no explanation, no code fences. If the transcript is empty, garbled, or clearly not construction-related, return:
+{"error": "Unable to extract construction log data from this transcript"}
 
+FIELD EXTRACTION RULES:
+
+date: Extract if mentioned (e.g. "today is June 3rd", "Monday the 5th"). Format as YYYY-MM-DD. If not mentioned, use null.
+
+project: Extract the project name or number if mentioned. Otherwise null.
+
+weather: Extract weather conditions from ANY natural language mention — "it's hot", "rained this morning", "clear skies", "about 85 degrees", "windy", "overcast". Capture the full description as a single string. If not mentioned, use null.
+
+crew_count: Extract headcount if mentioned (e.g. "14 guys on site", "crew of 8"). Format as a string like "14 workers on site". If not mentioned, use null.
+
+personnel_notes: Array of strings. One entry per notable person mentioned (arrivals, departures, injuries, performance notes).
+
+work_completed: Array of objects. Each object has:
+  - area: the trade, zone, or location (e.g. "third floor framing", "electrical rough-in")
+  - description: what was done
+
+issues: Array of objects. Each object has:
+  - priority: "HIGH" | "MEDIUM" | "LOW"
+  - description: clear description of the issue
+
+  Priority rules:
+  - HIGH: safety concerns, work stoppages, structural problems, anything blocking the critical path
+  - MEDIUM: delays, material shortages, coordination issues, rework needed
+  - LOW: minor observations, aesthetic concerns, non-urgent follow-ups
+
+site_conditions: Any general site observations not captured elsewhere (access, cleanliness, security, inspections). String or null.
+
+next_steps: Array of strings. One per action item mentioned.
+
+raw_notes: String. Any details from the transcript that don't fit the above fields.
+
+GUARDRAILS:
+- Do NOT invent data. If something isn't in the transcript, use null or an empty array.
+- Do NOT add assumptions, context, or elaborations beyond what was said.
+- Do NOT interpret ambiguous statements — capture them verbatim in raw_notes instead.
+- If the superintendent mentions a number, name, or date, capture it exactly as stated.
+- This is a legal field document. Accuracy is more important than completeness.
+
+Respond with this exact structure:
 {
-  "date": "string",
-  "project": "string or null if not mentioned",
+  "date": "YYYY-MM-DD or null",
+  "project": "string or null",
   "weather": "string or null",
-  "crew_count": "string or null (e.g. '14 workers on site')",
-  "personnel_notes": ["array of strings, one per notable personnel note"],
-  "work_completed": [
-    { "area": "string (trade or location)", "description": "string" }
-  ],
-  "issues": [
-    { "priority": "HIGH | MEDIUM | LOW", "description": "string" }
-  ],
+  "crew_count": "string or null",
+  "personnel_notes": ["string"],
+  "work_completed": [{ "area": "string", "description": "string" }],
+  "issues": [{ "priority": "HIGH|MEDIUM|LOW", "description": "string" }],
   "site_conditions": "string or null",
-  "next_steps": ["array of strings, one per action item"],
-  "raw_notes": "string — any details from the transcript that don't fit above"
-}
-
-Priority rules for issues:
-- HIGH: safety concerns, work stoppages, structural problems, anything blocking progress
-- MEDIUM: delays, material shortages, coordination issues, rework needed
-- LOW: minor observations, aesthetic concerns, non-urgent follow-ups
-
-If the transcript doesn't mention something, use null for strings or [] for arrays. Never invent information not in the transcript. Today's date is ${today}.`;
+  "next_steps": ["string"],
+  "raw_notes": "string or null"
+}`;
 
   try {
     const message = await anthropic.messages.create({
@@ -98,14 +127,19 @@ If the transcript doesn't mention something, use null for strings or [] for arra
   }
 });
 
-const ACTION_SYSTEM_PROMPT = `You are BLDR, an AI assistant for construction superintendents. Analyze the transcript and determine which ONE action type it describes, then structure the content accordingly.
+const ACTION_SYSTEM_PROMPT = `You are BLDR, an AI assistant for construction superintendents. Analyze the transcript and classify it into exactly one log type.
 
 ROUTING RULES:
-- If the transcript describes a problem, hazard, blocker, conflict, delay, or anything going wrong → type: "issue"
-- If the transcript describes work completed, progress made, crew activity, tasks done → type: "progress"  
-- If the transcript describes an unanswered question, unclear spec, missing information, or something that needs a formal written request → type: "rfi"
+- "issue": transcript describes a problem, hazard, blocker, safety concern, conflict, defect, or anything that needs resolution
+- "progress": transcript describes work completed, crew activity, progress made, materials installed, or site status
+- "rfi": transcript describes an unanswered question, unclear specification, missing information, or a request for clarification from the design or ownership team
 
-Respond ONLY with valid JSON. No explanation. No markdown. No code fences. Just raw JSON.
+GUARDRAILS:
+- Choose ONE type only — the dominant intent of the transcript
+- If the transcript contains both a problem and completed work, classify by whichever is more urgent
+- Do NOT invent fields. Use null for anything not mentioned.
+- Do NOT add context, assumptions, or professional opinions beyond what was said.
+- Respond ONLY with valid JSON. No markdown. No preamble.
 
 For type "issue":
 {
