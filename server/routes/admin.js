@@ -18,8 +18,6 @@ router.get('/users', requireAuth, adminOnly, async (req, res) => {
       SELECT
         u.id,
         u.name,
-        u.client_id,
-        u.role,
         COUNT(CASE WHEN n.created_at::date = CURRENT_DATE THEN 1 END)::int AS logs_today,
         COUNT(n.id)::int AS logs_total
       FROM users u
