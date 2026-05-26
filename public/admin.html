@@ -6,137 +6,31 @@
   <title>BLDR Admin</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Courier New', monospace;
-      background: #0a0a0a;
-      color: #e0e0e0;
-      min-height: 100vh;
-    }
-
-    header {
-      background: #111;
-      border-bottom: 2px solid #c0392b;
-      padding: 16px 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    header h1 {
-      font-size: 20px;
-      color: #c0392b;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-    }
-
-    header span {
-      font-size: 12px;
-      color: #666;
-    }
-
-    #logout-btn {
-      background: none;
-      border: 1px solid #444;
-      color: #aaa;
-      padding: 6px 14px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 12px;
-      letter-spacing: 1px;
-    }
-
+    body { font-family: 'Courier New', monospace; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; }
+    header { background: #111; border-bottom: 2px solid #c0392b; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { font-size: 20px; color: #c0392b; letter-spacing: 4px; text-transform: uppercase; }
+    header span { font-size: 12px; color: #666; }
+    #logout-btn { background: none; border: 1px solid #444; color: #aaa; padding: 6px 14px; cursor: pointer; font-family: inherit; font-size: 12px; letter-spacing: 1px; }
     #logout-btn:hover { border-color: #c0392b; color: #c0392b; }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      padding: 32px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .panel {
-      background: #111;
-      border: 1px solid #222;
-      padding: 24px;
-    }
-
-    .panel h2 {
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: #c0392b;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #222;
-    }
-
-    .full-width { grid-column: 1 / -1; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-
-    th {
-      text-align: left;
-      color: #666;
-      font-size: 10px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      padding: 8px 0;
-      border-bottom: 1px solid #222;
-    }
-
-    td {
-      padding: 10px 0;
-      border-bottom: 1px solid #1a1a1a;
-      color: #ccc;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      font-size: 10px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    .badge-issue    { background: #3a1010; color: #e74c3c; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 32px; max-width: 1400px; margin: 0 auto; }
+    .panel { background: #111; border: 1px solid #222; padding: 24px; }
+    .panel h2 { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #c0392b; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #222; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; color: #666; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding: 8px 0; border-bottom: 1px solid #222; }
+    td { padding: 10px 0; border-bottom: 1px solid #1a1a1a; color: #ccc; }
+    .badge { display: inline-block; padding: 2px 8px; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+    .badge-issue { background: #3a1010; color: #e74c3c; }
     .badge-progress { background: #0e2a1a; color: #2ecc71; }
-    .badge-rfi      { background: #1a1a3a; color: #3498db; }
-
-    .stat {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      padding: 12px 0;
-      border-bottom: 1px solid #1a1a1a;
-    }
-
+    .badge-rfi { background: #1a1a3a; color: #3498db; }
+    .stat { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 0; border-bottom: 1px solid #1a1a1a; }
     .stat-label { font-size: 12px; color: #666; }
-    .stat-value { font-size: 22px; color: #fff; }
-    .stat-sub   { font-size: 11px; color: #444; margin-top: 4px; }
-
+    .stat-sub { font-size: 11px; color: #444; margin-top: 4px; }
     .cost { color: #f39c12; font-size: 18px; }
-
     .empty { color: #888; font-size: 13px; padding: 16px 0; }
-    .error-msg { color: #e74c3c; font-size: 13px; padding: 16px 0; font-weight: bold; }
-
-    #loading {
-      text-align: center;
-      padding: 80px;
-      color: #444;
-      letter-spacing: 4px;
-      font-size: 12px;
-    }
+    #loading { text-align: center; padding: 80px; color: #444; letter-spacing: 4px; font-size: 12px; }
   </style>
 </head>
 <body>
-
 <header>
   <h1>BLDR // Admin</h1>
   <div style="display:flex;align-items:center;gap:20px;">
@@ -144,145 +38,66 @@
     <button id="logout-btn" onclick="logout()">LOGOUT</button>
   </div>
 </header>
-
 <div id="loading">LOADING...</div>
-
 <div id="dashboard" class="grid" style="display:none;">
-
-  <!-- Panel 1: Users -->
   <div class="panel">
     <h2>Superintendents</h2>
-      <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>User</th>
-              <th>Action</th>
-              <th>Calls</th>
-              <th>Tokens In</th>
-              <th>Tokens Out</th>
-            </tr>
-          </thead>
-          <tbody id="tokens-tbody">
-            <tr><td colspan="6" class="empty">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Panel 4: Activity Feed -->
-      <div class="panel">
-        <h2>Recent Activity</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>User</th>
-              <th>Type</th>
-              <th>Detail</th>
-            </tr>
-          </thead>
-          <tbody id="activity-tbody">
-            <tr><td colspan="4" class="empty">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-    </div>
-
-    <script>
-      const token = localStorage.getItem('token');
-      if (!token) { window.location.href = '/login.html'; }
-
-      document.getElementById('header-date').textContent =
-        new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-
-      async function apiFetch(path) {
-        const res = await fetch(path, { headers: { Authorization: 'Bearer ' + token } });
-        if (res.status === 401 || res.status === 403) {
-          alert('Access denied. Admin only.');
-          window.location.href = '/login.html';
-        }
-        return res.json();
-      }
-
-      function logout() {
-        localStorage.removeItem('token');
-        window.location.href = '/login.html';
-      }
-
-      function formatTime(ts) {
-        if (!ts) return '—';
-        return new Date(ts).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
-      }
-
-      function badgeHtml(type) {
-        return '<span class="badge badge-' + type + '">' + type + '</span>';
-      }
-
-      async function loadDashboard() {
-        try {
-          const [users, activity, tokens, billing] = await Promise.all([
-            apiFetch('/api/admin/users'),
-            apiFetch('/api/admin/activity'),
-            apiFetch('/api/admin/token-usage'),
-            apiFetch('/api/admin/billing'),
-          ]);
-
-          const uTbody = document.getElementById('users-tbody');
-          if (!users.length) {
-            uTbody.innerHTML = '<tr><td colspan="3" class="empty">No superintendents found</td></tr>';
-          } else {
-            uTbody.innerHTML = users.map(function(u) {
-              return '<tr><td>' + u.name + '</td><td>' + u.logs_today + '</td><td>' + u.logs_total + '</td></tr>';
-            }).join('');
-          }
-
-          const aTbody = document.getElementById('activity-tbody');
-          if (!activity.length) {
-            aTbody.innerHTML = '<tr><td colspan="4" class="empty">No activity yet</td></tr>';
-          } else {
-            aTbody.innerHTML = activity.slice(0, 20).map(function(a) {
-              var detail = a.description || a.work_completed || '—';
-              return '<tr><td>' + formatTime(a.created_at) + '</td><td>' + a.username + '</td><td>' + badgeHtml(a.type) + '</td><td>' + String(detail).substring(0, 40) + '</td></tr>';
-            }).join('');
-          }
-
-          const tTbody = document.getElementById('tokens-tbody');
-          if (!tokens.length) {
-            tTbody.innerHTML = '<tr><td colspan="6" class="empty">No token data yet</td></tr>';
-          } else {
-            tTbody.innerHTML = tokens.map(function(t) {
-              return '<tr><td>' + t.day + '</td><td>' +
-                t.username + '</td><td>' +
-                t.action + '</td><td>' +
-                t.calls + '</td><td>' +
-                t.total_in + '</td><td>' +
-                t.total_out + '</td></tr>';
-            }).join('');
-          }
-
-          const billingContainer = document.getElementById('billing-container');
-          if (!billing.length) {
-            billingContainer.innerHTML = '<p class="empty">No billing data yet</p>';
-          } else {
-            billingContainer.innerHTML = billing.map(function(b) {
-              return '<div class="stat">' +
-                '<div><div class="stat-label">Client ' + b.client_id + '</div>' +
-                '<div class="stat-sub">' + b.total_calls + ' calls // ' + b.total_in + ' in // ' + b.total_out + ' out</div></div>' +
-                '<div class="stat-value cost">$' + b.estimated_cost_usd + '</div>' +
-              '</div>';
-            }).join('');
-          }
-
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('dashboard').style.display = 'grid';
-        } catch (err) {
-          console.error('Admin dashboard error:', err);
-          document.getElementById('loading').innerHTML = '<span style="color:#e74c3c;font-size:14px;letter-spacing:2px;">⚠ ERROR LOADING DASHBOARD — open browser console (F12) for details</span>';
-        }
-      }
-
-      loadDashboard();
-    </script>
-  </body>
+    <table>
+      <thead><tr><th>Name</th><th>Logs Today</th><th>Total Logs</th></tr></thead>
+      <tbody id="users-tbody"><tr><td colspan="3" class="empty">Loading...</td></tr></tbody>
+    </table>
+  </div>
+  <div class="panel">
+    <h2>Billing Estimate</h2>
+    <div id="billing-container"><p class="empty">Loading...</p></div>
+  </div>
+  <div class="panel">
+    <h2>Token Usage — Last 14 Days</h2>
+    <table>
+      <thead><tr><th>Date</th><th>User</th><th>Action</th><th>Calls</th><th>Tokens</th></tr></thead>
+      <tbody id="tokens-tbody"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody>
+    </table>
+  </div>
+  <div class="panel">
+    <h2>Recent Activity</h2>
+    <table>
+      <thead><tr><th>Time</th><th>User</th><th>Type</th><th>Detail</th></tr></thead>
+      <tbody id="activity-tbody"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<script>
+var token = localStorage.getItem('token');
+if (!token) { window.location.href = '/login.html'; }
+document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+function logout() { localStorage.removeItem('token'); window.location.href = '/login.html'; }
+function formatTime(ts) { if (!ts) return '-'; return new Date(ts).toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'}); }
+function badge(type) { return '<span class="badge badge-' + type + '">' + type + '</span>'; }
+async function apiFetch(path) {
+  var res = await fetch(path, {headers: {Authorization: 'Bearer ' + token}});
+  if (res.status === 401 || res.status === 403) { alert('Admin access only.'); window.location.href = '/login.html'; }
+  return res.json();
+}
+async function loadDashboard() {
+  try {
+    var results = await Promise.all([apiFetch('/api/admin/users'), apiFetch('/api/admin/activity'), apiFetch('/api/admin/token-usage'), apiFetch('/api/admin/billing')]);
+    var users = results[0]; var activity = results[1]; var tokens = results[2]; var billing = results[3];
+    var uTbody = document.getElementById('users-tbody');
+    uTbody.innerHTML = users.length ? users.map(function(u){return '<tr><td>'+u.name+'</td><td>'+u.logs_today+'</td><td>'+u.logs_total+'</td></tr>';}).join('') : '<tr><td colspan="3" class="empty">No superintendents found</td></tr>';
+    var aTbody = document.getElementById('activity-tbody');
+    aTbody.innerHTML = activity.length ? activity.slice(0,20).map(function(a){var d=a.description||a.work_completed||'-';return '<tr><td>'+formatTime(a.created_at)+'</td><td>'+a.name+'</td><td>'+badge(a.type)+'</td><td>'+String(d).substring(0,40)+'</td></tr>';}).join('') : '<tr><td colspan="4" class="empty">No activity yet</td></tr>';
+    var tTbody = document.getElementById('tokens-tbody');
+    tTbody.innerHTML = tokens.length ? tokens.map(function(t){return '<tr><td>'+t.day+'</td><td>'+t.name+'</td><td>'+t.action+'</td><td>'+t.calls+'</td><td>'+Number(t.total_in).toLocaleString()+'</td></tr>';}).join('') : '<tr><td colspan="5" class="empty">No token data yet</td></tr>';
+    var bContainer = document.getElementById('billing-container');
+    bContainer.innerHTML = billing.length ? billing.map(function(b){return '<div class="stat"><div><div class="stat-label">'+b.client_id+'</div><div class="stat-sub">'+b.total_calls+' calls</div></div><div class="cost">$'+b.estimated_cost_usd+'</div></div>';}).join('') : '<p class="empty">No billing data yet</p>';
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'grid';
+  } catch(err) {
+    console.error('Admin dashboard error:', err);
+    document.getElementById('loading').innerHTML = '<span style="color:#e74c3c">ERROR: ' + err.message + '</span>';
+  }
+}
+loadDashboard();
+</script>
+</body>
 </html>
