@@ -45,6 +45,19 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+router.post('/reset-demo-passwords', async (req, res) => {
+  try {
+    const hash = await bcrypt.hash('bldr2026', 10);
+    await pool.query(
+      `UPDATE users SET password_hash = $1 WHERE id IN (3, 4, 5)`,
+      [hash]
+    );
+    res.json({ message: 'Passwords reset successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 module.exports = router;
-
