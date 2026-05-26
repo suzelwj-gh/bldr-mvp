@@ -2,4 +2,4 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "node server/utils/migrate.js && node server/utils/seed.js && npm run start"
+startCommand = "node server/utils/migrate.js && npm run start"
