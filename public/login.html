@@ -159,7 +159,7 @@
         localStorage.setItem('token', data.token);
         localStorage.setItem('name', data.name);
         localStorage.setItem('role', data.role);
-        window.location.href = '/dashboard.html';
+        window.location.href = data.role === 'admin' ? '/admin.html' : '/dashboard.html';
       } catch {
         errorEl.textContent = 'Unable to connect. Please try again.';
         errorEl.classList.add('visible');
