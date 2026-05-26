@@ -53,7 +53,11 @@ router.post('/daily-report', requireAuth, async (req, res) => {
       ? rfis.map((n, i) => `${i+1}. [${formatTime(n.created_at)}] ${n.content}`).join('\n')
       : 'No RFIs referenced today.';
 
-    const weatherNote = notes.find(n => n.content && /weather|temp|rain|sunny|cloudy|wind/i.test(n.content));
+    const weatherExtracted = notes
+      .filter(n => n.structured)
+      .map(n => { try { return JSON.parse(n.structured); } catch(e) { return null; } })
+      .filter(n => n && n.weather)
+      .map(n => n.weather)[0] || null;
 
     const data = {
       project_name: user.project_name || 'BLDR Demo Project',
@@ -65,7 +69,7 @@ router.post('/daily-report', requireAuth, async (req, res) => {
       pm_email: user.pm_email || '',
       weather_am_temp: '',
       weather_pm_temp: '',
-      weather_condition: weatherNote ? weatherNote.content : 'See notes',
+      weather_condition: weatherExtracted || 'Not recorded',
       weather_delay: 'No',
       weather_delay_hours: '0',
       site_conditions: 'Normal',
