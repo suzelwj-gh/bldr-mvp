@@ -233,7 +233,7 @@
             uTbody.innerHTML = '<tr><td colspan="3" class="empty">No superintendents found</td></tr>';
           } else {
             uTbody.innerHTML = users.map(function(u) {
-              return '<tr><td>' + u.username + '</td><td>' + u.logs_today + '</td><td>' + u.logs_total + '</td></tr>';
+              return '<tr><td>' + u.name + '</td><td>' + u.logs_today + '</td><td>' + u.logs_total + '</td></tr>';
             }).join('');
           }
 
