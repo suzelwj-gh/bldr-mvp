@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { pool } = require('../db');
+const pool = require('./db');
 
 async function seed() {
   const password = await bcrypt.hash('bldr2026', 10);
