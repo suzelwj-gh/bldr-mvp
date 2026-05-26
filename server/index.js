@@ -29,6 +29,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/report', reportRouter);
 app.use('/api/documents', documentsRouter);
 app.use('/api/transcribe', transcribeRouter(upload));
+const adminRouter = require('./routes/admin');
+app.use('/api/admin', adminRouter);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'BLDR is running', timestamp: new Date() });
