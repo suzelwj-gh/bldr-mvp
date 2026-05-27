@@ -46,11 +46,25 @@ router.post('/daily-report', requireAuth, async (req, res) => {
       : 'No issues reported.';
 
     const workSummary = progress.length
-      ? progress.map((n, i) => `${i+1}. [${formatTime(n.created_at)}] ${n.content}`).join('\n')
+      ? progress.map((n, i) => {
+        try {
+          const structured = JSON.parse(n.structured);
+          return `${i+1}. [${formatTime(n.created_at)}] ${structured.work_completed || structured.summary || 'Progress noted'}`;
+        } catch(e) {
+          return `${i+1}. [${formatTime(n.created_at)}] Progress noted`;
+        }
+      }).join('\n')
       : 'No progress notes recorded.';
 
     const rfiSummary = rfis.length
-      ? rfis.map((n, i) => `${i+1}. [${formatTime(n.created_at)}] ${n.content}`).join('\n')
+      ? rfis.map((n, i) => {
+        try {
+          const structured = JSON.parse(n.structured);
+          return `${i+1}. [${formatTime(n.created_at)}] ${structured.subject || structured.question || 'RFI noted'}`;
+        } catch(e) {
+          return `${i+1}. [${formatTime(n.created_at)}] RFI noted`;
+        }
+      }).join('\n')
       : 'No RFIs referenced today.';
 
     const weatherExtracted = notes
