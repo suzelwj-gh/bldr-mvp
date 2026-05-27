@@ -64,9 +64,12 @@ router.post('/daily-report', requireAuth, async (req, res) => {
 
     const weatherExtracted = notes
       .filter(n => n.structured)
-      .map(n => { try { return JSON.parse(n.structured); } catch(e) { return null; } })
-      .filter(n => n && n.weather)
-      .map(n => n.weather)[0] || null;
+      .map(n => {
+        const s = (n.structured && n.structured[0]) ? n.structured[0] : (n.structured || {});
+        return s.notes || null;
+      })
+      .filter(n => n && (n.toLowerCase().includes('weather') || n.toLowerCase().includes('temp') || n.toLowerCase().includes('degree') || n.toLowerCase().includes('overcast') || n.toLowerCase().includes('sunny') || n.toLowerCase().includes('rain')))
+      [0] || null;
 
     const data = {
       project_name: user.project_name || 'BLDR Demo Project',
