@@ -17,14 +17,14 @@ router.get('/users', requireAuth, adminOnly, async (req, res) => {
     const result = await pool.query(`
       SELECT
         u.id,
-        u.name,
+        TRIM(regexp_replace(COALESCE(u.name, ''), '^(PM|Superintendent|superintendent)\s*', '', 'gi')) AS name,
         COUNT(CASE WHEN n.created_at::date = CURRENT_DATE THEN 1 END)::int AS logs_today,
         COUNT(n.id)::int AS logs_total
       FROM users u
       LEFT JOIN notes n ON n.user_id = u.id
       WHERE u.role = 'superintendent'
-      GROUP BY u.id
-      ORDER BY u.name ASC
+      GROUP BY u.id, u.name
+      ORDER BY name ASC
     `);
     res.json(result.rows);
   } catch (err) {
@@ -38,7 +38,7 @@ router.get('/activity', requireAuth, adminOnly, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        u.name,
+        TRIM(regexp_replace(COALESCE(u.name, ''), '^(PM|Superintendent|superintendent)\s*', '', 'gi')) AS name,
         n.id,
         n.type,
         n.created_at,
@@ -62,7 +62,7 @@ router.get('/token-usage', requireAuth, adminOnly, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        u.name,
+        TRIM(regexp_replace(COALESCE(u.name, ''), '^(PM|Superintendent|superintendent)\s*', '', 'gi')) AS name,
         u.email AS client_id,
         'transcribe' AS action,
         SUM(t.tokens_used)::int AS total_in,
@@ -72,7 +72,7 @@ router.get('/token-usage', requireAuth, adminOnly, async (req, res) => {
       FROM token_usage t
       JOIN users u ON t.user_id = u.id
       WHERE t.date >= CURRENT_DATE - INTERVAL '14 days'
-      GROUP BY u.name, u.email, t.date
+      GROUP BY TRIM(regexp_replace(COALESCE(u.name, ''), '^(PM|Superintendent|superintendent)\s*', '', 'gi')), u.email, t.date
       ORDER BY day DESC
     `);
     res.json(result.rows);
