@@ -42,30 +42,23 @@ router.post('/daily-report', requireAuth, async (req, res) => {
     const rfis = notes.filter(n => n.type === 'rfi');
 
     const issuesSummary = issues.length
-      ? issues.map((n, i) => `${i+1}. [${formatTime(n.created_at)}] ${n.content}`).join('\n')
+      ? issues.map((n, i) => {
+        const s = (n.structured && n.structured[0]) ? n.structured[0] : (n.structured || {});
+        return `${i+1}. [${formatTime(n.created_at)}] ${s.description || s.issue || 'Issue noted'}`;
+      }).join('\n')
       : 'No issues reported.';
-
-    console.log('PROGRESS NOTE STRUCTURED:', notes.filter(n => n.type === 'progress').map(n => n.structured));
 
     const workSummary = progress.length
       ? progress.map((n, i) => {
-        try {
-          const structured = JSON.parse(n.structured);
-          return `${i+1}. [${formatTime(n.created_at)}] ${structured.work_completed || structured.summary || 'Progress noted'}`;
-        } catch(e) {
-          return `${i+1}. [${formatTime(n.created_at)}] Progress noted`;
-        }
+        const s = (n.structured && n.structured[0]) ? n.structured[0] : (n.structured || {});
+        return `${i+1}. [${formatTime(n.created_at)}] ${s.work_completed || s.summary || 'Progress noted'}`;
       }).join('\n')
       : 'No progress notes recorded.';
 
     const rfiSummary = rfis.length
       ? rfis.map((n, i) => {
-        try {
-          const structured = JSON.parse(n.structured);
-          return `${i+1}. [${formatTime(n.created_at)}] ${structured.subject || structured.question || 'RFI noted'}`;
-        } catch(e) {
-          return `${i+1}. [${formatTime(n.created_at)}] RFI noted`;
-        }
+        const s = (n.structured && n.structured[0]) ? n.structured[0] : (n.structured || {});
+        return `${i+1}. [${formatTime(n.created_at)}] ${s.subject || s.question || 'RFI noted'}`;
       }).join('\n')
       : 'No RFIs referenced today.';
 
