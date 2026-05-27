@@ -70,6 +70,8 @@ router.post('/daily-report', requireAuth, async (req, res) => {
       })
       .filter(n => n && (n.toLowerCase().includes('weather') || n.toLowerCase().includes('temp') || n.toLowerCase().includes('degree') || n.toLowerCase().includes('overcast') || n.toLowerCase().includes('sunny') || n.toLowerCase().includes('rain')))
       [0] || null;
+    const tempMatch = weatherExtracted ? weatherExtracted.match(/(\d+)\s*degree/i) : null;
+    const tempF = tempMatch ? tempMatch[1] : '';
 
     const data = {
       project_name: user.project_name || 'BLDR Demo Project',
@@ -79,8 +81,8 @@ router.post('/daily-report', requireAuth, async (req, res) => {
       report_number: todayStr.replace(/-/g, ''),
       superintendent_name: user.name || user.email,
       pm_email: user.pm_email || '',
-      weather_am_temp: '',
-      weather_pm_temp: '',
+      weather_am_temp: tempF,
+      weather_pm_temp: tempF,
       weather_condition: weatherExtracted || 'Not recorded',
       weather_delay: 'No',
       weather_delay_hours: '0',
