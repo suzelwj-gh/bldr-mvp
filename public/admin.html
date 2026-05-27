@@ -87,7 +87,7 @@ async function loadDashboard() {
     var uTbody = document.getElementById('users-tbody');
     uTbody.innerHTML = users.length ? users.map(function(u){return '<tr><td>'+u.name+'</td><td>'+u.logs_today+'</td><td>'+u.logs_total+'</td></tr>';}).join('') : '<tr><td colspan="3" class="empty">No superintendents found</td></tr>';
     var aTbody = document.getElementById('activity-tbody');
-    aTbody.innerHTML = activity.length ? activity.slice(0,20).map(function(a){var d=a.description||a.work_completed||'-';var userName=String(a.name||'').replace(/^PM\s*/,'');return '<tr><td>'+formatTime(a.created_at)+'</td><td>'+userName+'</td><td>'+badge(a.type)+'</td><td>'+String(d).substring(0,40)+'</td></tr>';}).join('') : '<tr><td colspan="4" class="empty">No activity yet</td></tr>';
+    aTbody.innerHTML = activity.length ? activity.slice(0,20).map(function(a){var d=a.description||a.work_completed||'-';var userName=String(a.name||'').replace(/^PM/i,'');return '<tr><td>'+formatTime(a.created_at)+'</td><td>'+userName+'</td><td>'+badge(a.type)+'</td><td>'+String(d).substring(0,40)+'</td></tr>';}).join('') : '<tr><td colspan="4" class="empty">No activity yet</td></tr>';
     var tTbody = document.getElementById('tokens-tbody');
     tTbody.innerHTML = tokens.length ? tokens.map(function(t){return '<tr><td>'+t.day+'</td><td>'+t.name+'</td><td>'+t.action+'</td><td>'+t.calls+'</td><td>'+Number(t.total_in).toLocaleString()+'</td></tr>';}).join('') : '<tr><td colspan="5" class="empty">No token data yet</td></tr>';
     var bContainer = document.getElementById('billing-container');
