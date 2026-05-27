@@ -45,6 +45,8 @@ router.post('/daily-report', requireAuth, async (req, res) => {
       ? issues.map((n, i) => `${i+1}. [${formatTime(n.created_at)}] ${n.content}`).join('\n')
       : 'No issues reported.';
 
+    console.log('PROGRESS NOTE STRUCTURED:', notes.filter(n => n.type === 'progress').map(n => n.structured));
+
     const workSummary = progress.length
       ? progress.map((n, i) => {
         try {
