@@ -38,7 +38,7 @@ router.get('/activity', requireAuth, adminOnly, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        TRIM(regexp_replace(COALESCE(u.name, ''), '^(PM|Superintendent|superintendent)\s*', '', 'gi')) AS name,
+        TRIM(regexp_replace(COALESCE(u.name, ''), '^(PM|Superintendent|superintendent)\s*', '', 'gi')) AS name, -- v2
         n.id,
         n.type,
         n.created_at,
