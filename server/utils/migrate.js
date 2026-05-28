@@ -29,6 +29,7 @@ const migrations = [
     cost_usd NUMERIC(10, 4),
     created_at TIMESTAMP DEFAULT NOW()
   )`,
+  `UPDATE users SET name = TRIM(regexp_replace(name, '^(PM|Superintendent|superintendent)\s*', '', 'gi')) WHERE name ~ '^(PM|Superintendent|superintendent)'`,
 ];
 
 async function migrate() {
