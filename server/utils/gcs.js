@@ -3,16 +3,13 @@ const { Storage } = require('@google-cloud/storage');
 
 const BUCKET_NAME = 'bldr-mvp-documents-v1';
 const SIGNED_URL_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const LOCAL_KEY_FILE = path.join(__dirname, '..', '..', 'bldr-mvp-496322-bbb9cc45a212.json');
+const LOCAL_KEY_FILE = path.join(__dirname, '..', '..', 'gcs-credentials.json');
 
 let bucket;
 
 function createStorageClient() {
-  const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
-  if (credentialsJson) {
-    return new Storage({ credentials: JSON.parse(credentialsJson.replace(/\\n/g, '\n')) });
-  }
-  return new Storage({ keyFilename: LOCAL_KEY_FILE });
+  const keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS_PATH || LOCAL_KEY_FILE;
+  return new Storage({ keyFilename });
 }
 
 /**
