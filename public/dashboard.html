@@ -151,6 +151,44 @@
       max-width: 320px;
       line-height: 1.5;
     }
+
+    #cloudReportBanner {
+      display: none;
+      max-width: 360px;
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 1rem 1.25rem;
+      background: #111418;
+      border: 1px solid #2563eb;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    #cloudReportBanner.visible {
+      display: block;
+    }
+
+    #cloudReportBanner p {
+      font-size: 0.9375rem;
+      color: #9ca3af;
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+
+    #cloudReportBanner a {
+      display: inline-block;
+      padding: 0.75rem 1.25rem;
+      background: #16a34a;
+      color: #fff;
+      font-weight: 700;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    #cloudReportBanner a:hover {
+      background: #15803d;
+    }
   </style>
 </head>
 <body>
@@ -167,6 +205,10 @@
     <a href="/record.html" class="record-btn">🎙 Record Field Note</a>
     <button id="wrapUpBtn" class="wrapup-btn">📄 Wrap Up My Day</button><a href="/log.html" class="log-btn">📋 Today's Log</a>
     <p class="subtitle">Speak naturally — BLDR will figure out the rest</p>
+    <div id="cloudReportBanner" aria-live="polite">
+      <p>Your report has been saved to the cloud </p>
+      <a id="cloudReportLink" href="#" target="_blank" rel="noopener noreferrer">View Report</a>
+    </div>
   </main>
 
   <script>
@@ -188,6 +230,26 @@
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+    }
+
+    function showCloudReportLink(gcsUrl) {
+      const banner = document.getElementById('cloudReportBanner');
+      const link = document.getElementById('cloudReportLink');
+      if (!gcsUrl) {
+        banner.classList.remove('visible');
+        return;
+      }
+      link.href = gcsUrl;
+      banner.classList.add('visible');
+    }
+
+    function base64ToPdfBlob(base64) {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new Blob([bytes], { type: 'application/pdf' });
     }
 
     function todayParts() {
@@ -285,13 +347,18 @@
           method: 'POST',
           headers: { Authorization: 'Bearer ' + token }
         });
+        const pdfData = await pdfRes.json();
         if (!pdfRes.ok) {
-          const err = await pdfRes.json();
-          throw new Error(err.error || 'Failed to generate PDF.');
+          throw new Error(pdfData.error || 'Failed to generate PDF.');
         }
-        const pdfBlob = await pdfRes.blob();
-        downloadBlob(pdfBlob, 'BLDR_Report.pdf');
-        alert('DOCX and PDF reports downloaded.');
+        if (pdfData.pdf) {
+          downloadBlob(base64ToPdfBlob(pdfData.pdf), pdfData.filename || 'BLDR_Report.pdf');
+        }
+        showCloudReportLink(pdfData.gcsUrl);
+        const cloudMsg = pdfData.gcsUrl
+          ? ' DOCX and PDF downloaded. Your report is also saved in the cloud.'
+          : ' DOCX and PDF downloaded.';
+        alert('Wrap up complete.' + cloudMsg);
       } catch (err) {
         alert(err.message || 'Error');
       } finally {
