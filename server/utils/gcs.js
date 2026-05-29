@@ -5,6 +5,8 @@ const BUCKET_NAME = 'bldr-mvp-documents-v1';
 const SIGNED_URL_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const LOCAL_KEY_FILE = path.join(__dirname, '..', '..', 'bldr-mvp-496322-bbb9cc45a212.json');
 
+let bucket;
+
 function createStorageClient() {
   const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
   if (credentialsJson) {
@@ -12,9 +14,6 @@ function createStorageClient() {
   }
   return new Storage({ keyFilename: LOCAL_KEY_FILE });
 }
-
-const storage = createStorageClient();
-const bucket = storage.bucket(BUCKET_NAME);
 
 /**
  * Upload a buffer to GCS and return a signed read URL (7 days).
@@ -24,6 +23,10 @@ const bucket = storage.bucket(BUCKET_NAME);
  * @returns {Promise<string>}
  */
 async function uploadToGCS(buffer, filename, folder) {
+  if (!bucket) {
+    bucket = createStorageClient().bucket(BUCKET_NAME);
+  }
+
   const objectPath = folder ? `${folder.replace(/\/$/, '')}/${filename}` : filename;
   const file = bucket.file(objectPath);
 
