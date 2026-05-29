@@ -1,4 +1,4 @@
-const express=require('express'),router=express.Router(),{requireAuth}=require('../middleware/auth'),{Pool}=require('pg'),PDFDocument=require('pdfkit'),nodemailer=require('nodemailer'),pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});
+const express=require('express'),router=express.Router(),{requireAuth}=require('../middleware/auth'),{uploadToGCS}=require('../utils/gcs'),{Pool}=require('pg'),PDFDocument=require('pdfkit'),nodemailer=require('nodemailer'),pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:{rejectUnauthorized:false}});
 
 function getT(){return nodemailer.createTransport({host:process.env.SMTP_HOST,port:465,secure:true,auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS}});}
 
@@ -23,6 +23,7 @@ const fy=doc.page.height-40;doc.rect(0,fy-10,doc.page.width,50).fill('#F5F6F8');
 router.post('/daily',requireAuth,async(req,res)=>{const user=req.user;user.name=user.name||user.email||'Superintendent';user.project=user.project||'BLDR Project';user.pmEmail=user.pmEmail||user.email;try{const result=await pool.query('SELECT id,type,structured,raw_transcript,created_at FROM notes WHERE user_id=$1 AND created_at::date=NOW()::date ORDER BY created_at ASC',[user.id]);const notes=result.rows.map(r=>({id:r.id,type:r.type,structured:r.structured,rawTranscript:r.raw_transcript,createdAt:r.created_at}));if(!notes.length)return res.status(400).json({error:'No notes logged today.'});
 
 const pdfBuffer=await buildPDF(user,notes);const today=new Date().toLocaleDateString('en-US',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');const filename='BLDR_Report_'+user.name.replace(/\s+/g,'_')+'_'+today+'.pdf';const pmEmail=user.pmEmail||user.email;// email skipped - SMTP blocked on Railway
+try{const gcsUrl=await uploadToGCS(pdfBuffer,filename,String(user.id));console.log('GCS report URL:',gcsUrl);}catch(gcsErr){console.error('GCS upload failed:',gcsErr);}
 
 res.setHeader('Content-Type','application/pdf');res.setHeader('Content-Disposition','attachment; filename='+filename);res.send(pdfBuffer);}catch(err){console.error('Report error:',err);res.status(500).json({error:'Failed to generate report.'});}});
 module.exports=router;
