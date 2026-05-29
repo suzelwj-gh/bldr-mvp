@@ -1,6 +1,7 @@
 node_modules/
 .env
 bldr-mvp-496322-bbb9cc45a212.json
+gcs-credentials.json
 *.json.key
 gcs-credentials-oneline.txt
 gcs-clean.json

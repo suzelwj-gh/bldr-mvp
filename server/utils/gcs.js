@@ -8,6 +8,12 @@ const LOCAL_KEY_FILE = path.join(__dirname, '..', '..', 'gcs-credentials.json');
 let bucket;
 
 function createStorageClient() {
+  const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  if (credentialsJson) {
+    return new Storage({
+      credentials: JSON.parse(credentialsJson.replace(/\\n/g, '\n')),
+    });
+  }
   const keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS_PATH || LOCAL_KEY_FILE;
   return new Storage({ keyFilename });
 }
