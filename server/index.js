@@ -148,7 +148,54 @@ For type "rfi":
   "urgency": "HIGH" | "MEDIUM" | "LOW",
   "requested_by": "Superintendent",
   "notes": "any context or background"
-}`;
+}
+
+CRITICAL OUTPUT RULE: Return a single JSON object only. The "type" field MUST be exactly one lowercase word: "issue", "progress", or "rfi" — never "RFI", "Issue", "Progress", or any other value.`;
+}
+
+function parseClaudeJson(rawText) {
+  let cleaned = rawText
+    .trim()
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/```\s*$/i, '')
+    .trim();
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON object in response');
+    return JSON.parse(match[0]);
+  }
+}
+
+function normalizeActionType(value) {
+  if (value == null) return null;
+  const t = String(value).trim().toLowerCase();
+  if (t === 'issue' || t === 'issues' || t === 'problem' || t === 'safety') return 'issue';
+  if (t === 'progress' || t === 'progress note' || t === 'daily' || t === 'work') return 'progress';
+  if (t === 'rfi' || t === 'request for information' || t.includes('rfi')) return 'rfi';
+  if (t.includes('issue') || t.includes('problem') || t.includes('hazard')) return 'issue';
+  if (t.includes('progress') || t.includes('completed')) return 'progress';
+  if (t.includes('clarification') || t.includes('question')) return 'rfi';
+  return null;
+}
+
+function normalizeActionResponse(parsed) {
+  let data = parsed;
+  if (data == null || typeof data !== 'object') return null;
+  if (Array.isArray(data)) data = data[0];
+  if (data.log && typeof data.log === 'object') data = data.log;
+  if (data.action && typeof data.action === 'object') data = data.action;
+  if (data.result && typeof data.result === 'object') data = data.result;
+
+  const type = normalizeActionType(
+    data.type ?? data.log_type ?? data.action_type ?? data.category ?? data.note_type
+  );
+  if (!type) return null;
+
+  return { ...data, type };
 }
 
 function initializePrompts(guide, glossary) {
@@ -228,16 +275,17 @@ app.post('/api/structure-action', requireAuth, async (req, res) => {
     });
 
     const rawText = message.content[0].text.trim();
-    const cleaned = rawText
-      .replace(/^```json\s*/i, '')
-      .replace(/^```\s*/i, '')
-      .replace(/```\s*$/i, '')
-      .trim();
 
     try {
-      const structured = JSON.parse(cleaned);
+      const parsed = parseClaudeJson(rawText);
+      const structured = normalizeActionResponse(parsed);
+      if (!structured) {
+        console.error('Invalid action type in Claude response:', rawText.slice(0, 500));
+        return res.status(500).json({ error: 'Could not structure transcript' });
+      }
       res.json(structured);
-    } catch {
+    } catch (parseErr) {
+      console.error('Action JSON parse error:', parseErr.message, rawText.slice(0, 500));
       res.status(500).json({ error: 'Could not structure transcript' });
     }
   } catch (err) {
