@@ -74,7 +74,7 @@ router.post('/daily-report', requireAuth, async (req, res) => {
     const tempF = tempMatch ? tempMatch[1] : '';
 
     const data = {
-      project_name: user.project_name || 'BLDR Demo Project',
+      project_name: user.project_name || 'ARI Demo Project',
       project_number: user.project_number || '2026-001',
       date: formatDate(today),
       day_of_week: DAYS[today.getDay()],
@@ -103,7 +103,7 @@ router.post('/daily-report', requireAuth, async (req, res) => {
     };
 
     const buffer = generateDoc('BLDR_Daily_Construction_Report.docx', data);
-    sendDocx(res, buffer, `daily-report-${safePart(todayStr, 'today')}.docx`);
+    sendDocx(res, buffer, `ari-report-${safePart(todayStr, 'today')}.docx`);
   } catch (err) {
     console.error('Daily report DOCX error:', err);
     res.status(500).json({ error: 'Failed to generate daily report.' });

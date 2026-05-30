@@ -8,19 +8,19 @@ async function seed() {
     {
       name: 'Suzel Wyvill-Jones',
       email: 'suzelwj@gmail.com',
-      project: 'BLDR Demo',
+      project: 'ARI Demo',
       pm_email: 'suzelwj@outlook.com',
     },
     {
       name: 'DeMario McIlwain',
       email: 'demario@myskilldora.com',
-      project: 'BLDR Demo',
+      project: 'ARI Demo',
       pm_email: 'demario@myskilldora.com',
     },
     {
       name: 'Conroy Parchment',
       email: 'cparchment@cpjenterprise.com',
-      project: 'BLDR Demo',
+      project: 'ARI Demo',
       pm_email: 'cparchment@cpjenterprise.com',
     },
   ];

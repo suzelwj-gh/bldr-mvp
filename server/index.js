@@ -33,7 +33,7 @@ const adminRouter = require('./routes/admin');
 app.use('/api/admin', adminRouter);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'BLDR is running', timestamp: new Date() });
+  res.json({ status: 'ARI is running', timestamp: new Date() });
 });
 app.post('/api/structure-transcript', requireAuth, async (req, res) => {
   const { transcript } = req.body;
@@ -127,7 +127,7 @@ Respond with this exact structure:
   }
 });
 
-const ACTION_SYSTEM_PROMPT = `You are BLDR, an AI assistant for construction superintendents. Analyze the transcript and classify it into exactly one log type.
+const ACTION_SYSTEM_PROMPT = `You are ARI, an AI assistant for construction superintendents. Analyze the transcript and classify it into exactly one log type.
 
 ROUTING RULES:
 - "issue": transcript describes a problem, hazard, blocker, safety concern, conflict, defect, or anything that needs resolution
@@ -253,7 +253,7 @@ app.get('/api/notes/today', authenticateToken, async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`BLDR server running on port ${PORT}`);
+  console.log(`ARI server running on port ${PORT}`);
 });
 
 module.exports = app;

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BLDR — Dashboard</title>
+  <title>ARI — Dashboard</title>
   <style>
     * {
       box-sizing: border-box;
@@ -193,7 +193,7 @@
 </head>
 <body>
   <header>
-    <div class="logo">BLDR</div>
+    <div class="logo">ARI</div>
     <div class="header-right">
       <p class="logged-in">Logged in as: <strong id="userName">—</strong></p>
       <button type="button" id="logoutBtn">Logout</button>
@@ -204,7 +204,7 @@
     <h1>What do you need to do?</h1>
     <a href="/record.html" class="record-btn">🎙 Record Field Note</a>
     <button id="wrapUpBtn" class="wrapup-btn">📄 Wrap Up My Day</button><a href="/log.html" class="log-btn">📋 Today's Log</a>
-    <p class="subtitle">Speak naturally — BLDR will figure out the rest</p>
+    <p class="subtitle">Speak naturally — ARI will figure out the rest</p>
     <div id="cloudReportBanner" aria-live="polite">
       <p>Your report has been saved to the cloud </p>
       <a id="cloudReportLink" href="#" target="_blank" rel="noopener noreferrer">View Report</a>
@@ -341,7 +341,7 @@
           throw new Error(err.error || 'Failed to generate DOCX.');
         }
         const docxBlob = await docxRes.blob();
-        downloadBlob(docxBlob, `daily-report-${reportBody.date}.docx`);
+        downloadBlob(docxBlob, `ari-report-${reportBody.date}.docx`);
 
         const pdfRes = await fetch('/api/report/daily', {
           method: 'POST',
@@ -352,7 +352,7 @@
           throw new Error(pdfData.error || 'Failed to generate PDF.');
         }
         if (pdfData.pdf) {
-          downloadBlob(base64ToPdfBlob(pdfData.pdf), pdfData.filename || 'BLDR_Report.pdf');
+          downloadBlob(base64ToPdfBlob(pdfData.pdf), pdfData.filename || 'ARI_Report.pdf');
         }
         showCloudReportLink(pdfData.gcsUrl);
         const cloudMsg = pdfData.gcsUrl
