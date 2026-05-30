@@ -382,6 +382,7 @@
     let audioChunks = [];
     let isRecording = false;
     let micStream = null;
+    const RECORDER_TIMESLICE_MS = 1000; // periodic chunks — required for reliable long recordings
 
     function showPanel(name) {
       Object.values(panels).forEach((p) => p.classList.remove('active'));
@@ -534,10 +535,16 @@
             : '';
         mediaRecorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
         mediaRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0) audioChunks.push(e.data);
+          if (e.data && e.data.size > 0) audioChunks.push(e.data);
         };
-        mediaRecorder.onstop = () => transcribeAudio();
-        mediaRecorder.start();
+        mediaRecorder.onerror = () => {
+          setStatus('Recording error', 'error');
+          isRecording = false;
+          micBtn.classList.remove('recording');
+          micRing.classList.remove('pulse');
+        };
+        // Timeslice ensures chunks flush during long recordings (not only at stop)
+        mediaRecorder.start(RECORDER_TIMESLICE_MS);
         isRecording = true;
         micBtn.classList.add('recording');
         micRing.classList.add('pulse');
@@ -547,13 +554,27 @@
       }
     }
 
-    function stopRecording() {
+    async function stopRecording() {
       if (!isRecording || !mediaRecorder) return;
       isRecording = false;
       micBtn.classList.remove('recording');
       micRing.classList.remove('pulse');
       setStatus('Processing...', 'working');
-      mediaRecorder.stop();
+
+      const recorder = mediaRecorder;
+      await new Promise((resolve) => {
+        recorder.addEventListener('stop', () => resolve(), { once: true });
+        if (recorder.state === 'recording') {
+          try {
+            if (typeof recorder.requestData === 'function') recorder.requestData();
+          } catch (_) { /* ignore */ }
+          recorder.stop();
+        } else {
+          resolve();
+        }
+      });
+
+      await transcribeAudio();
     }
 
     micBtn.addEventListener('click', () => {
@@ -566,6 +587,13 @@
 
     async function transcribeAudio() {
       const blob = new Blob(audioChunks, { type: mediaRecorder?.mimeType || 'audio/webm' });
+      console.log('Audio blob:', blob.size, 'bytes, chunks:', audioChunks.length);
+      if (!blob.size) {
+        showPanel('transcript');
+        showError('No audio captured. Try recording again.');
+        setStatus('Ready');
+        return;
+      }
       const ext = (mediaRecorder?.mimeType || '').includes('mp4') ? 'mp4' : 'webm';
       const formData = new FormData();
       formData.append('audio', blob, `recording.${ext}`);

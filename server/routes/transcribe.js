@@ -7,12 +7,24 @@ const fetch = require('node-fetch');
 module.exports = (upload) => {
   const router = express.Router();
 
-  router.post('/', requireAuth, upload.single('audio'), async (req, res) => {
+  router.post('/', requireAuth, (req, res, next) => {
+    upload.single('audio')(req, res, (err) => {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(413).json({ error: 'Audio file too large (max 25MB). Try a shorter recording.' });
+        }
+        console.error('Audio upload error:', err);
+        return res.status(400).json({ error: 'Audio upload failed' });
+      }
+      next();
+    });
+  }, async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No audio file provided' });
     }
 
     try {
+      console.log(`Transcribe upload: ${req.file.size} bytes, ${req.file.mimetype}`);
       const form = new FormData();
       form.append('file', req.file.buffer, {
         filename: 'audio.webm',

@@ -22,7 +22,10 @@ const {
   summarizeSuperintendentGuide,
 } = require('./utils/loadKnowledge');
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 26 * 1024 * 1024 }, // Whisper API max upload 25MB
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
