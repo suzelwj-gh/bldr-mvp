@@ -39,6 +39,13 @@
     #activity-table td:nth-child(4) { min-width: 100px; }
     td.activity-detail { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #loading { text-align: center; padding: 80px; color: #888; letter-spacing: 4px; font-size: 12px; }
+    .panel-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+    .panel-btn { background: #333; border: 1px solid #555; color: #ddd; padding: 6px 12px; font-family: inherit; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 2px; }
+    .panel-btn:hover { border-color: #e74c3c; color: #fff; }
+    .load-more-wrap { text-align: center; padding: 16px 0 4px; }
+    .load-more-btn { background: none; border: 1px solid #666; color: #ccc; padding: 8px 20px; cursor: pointer; font-family: inherit; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+    .load-more-btn:hover { border-color: #e74c3c; color: #e74c3c; }
+    .load-more-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -53,6 +60,9 @@
 <div id="dashboard" class="grid" style="display:none;">
   <div class="panel">
     <h2>Superintendents</h2>
+    <div class="panel-toolbar">
+      <button type="button" class="panel-btn" id="export-users-csv">Export CSV</button>
+    </div>
     <table>
       <thead><tr><th>Name</th><th>Logs Today</th><th>Total Logs</th></tr></thead>
       <tbody id="users-tbody"><tr><td colspan="3" class="empty">Loading...</td></tr></tbody>
@@ -71,10 +81,16 @@
   </div>
   <div class="panel">
     <h2>Recent Activity</h2>
+    <div class="panel-toolbar">
+      <button type="button" class="panel-btn" id="export-activity-csv">Export CSV</button>
+    </div>
     <table id="activity-table">
       <thead><tr><th>Time</th><th>User</th><th>Type</th><th>Detail</th></tr></thead>
       <tbody id="activity-tbody"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody>
     </table>
+    <div class="load-more-wrap" id="activity-load-more-wrap" style="display:none;">
+      <button type="button" class="load-more-btn" id="activity-load-more">Load More</button>
+    </div>
   </div>
 </div>
 <script>
@@ -83,7 +99,53 @@ if (!token) { window.location.href = '/login.html'; }
 document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
 function logout() { localStorage.removeItem('token'); window.location.href = '/login.html'; }
 function formatTime(ts) { if (!ts) return '-'; return new Date(ts).toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'}); }
+function formatDate(ts) { if (!ts) return '-'; return new Date(ts).toLocaleDateString('en-US', {year:'numeric',month:'2-digit',day:'2-digit'}); }
 function badge(type) { return '<span class="badge badge-' + type + '">' + type + '</span>'; }
+function cleanUserName(name) { return String(name || '').replace(/^PM\s*/i, ''); }
+function csvEscape(val) {
+  var s = val == null ? '' : String(val);
+  if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+function downloadCsv(filename, headers, rows) {
+  var lines = [headers.map(csvEscape).join(',')];
+  rows.forEach(function(row) { lines.push(row.map(csvEscape).join(',')); });
+  var blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+}
+var allUsers = [];
+var allActivity = [];
+var activityDisplayCount = 10;
+var ACTIVITY_PAGE_SIZE = 10;
+function renderActivityRows() {
+  var slice = allActivity.slice(0, activityDisplayCount);
+  var aTbody = document.getElementById('activity-tbody');
+  if (!slice.length) {
+    aTbody.innerHTML = '<tr><td colspan="4" class="empty">No activity yet</td></tr>';
+    document.getElementById('activity-load-more-wrap').style.display = 'none';
+    return;
+  }
+  aTbody.innerHTML = slice.map(function(a) {
+    var d = a.description || a.work_completed || '-';
+    var userName = cleanUserName(a.name);
+    return '<tr><td>' + formatTime(a.created_at) + '</td><td>' + userName + '</td><td>' + badge(a.type) + '</td><td class="activity-detail">' + String(d) + '</td></tr>';
+  }).join('');
+  var wrap = document.getElementById('activity-load-more-wrap');
+  var btn = document.getElementById('activity-load-more');
+  if (activityDisplayCount < allActivity.length) {
+    wrap.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Load More (' + (allActivity.length - activityDisplayCount) + ' remaining)';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
 async function apiFetch(path) {
   var res = await fetch(path, {headers: {Authorization: 'Bearer ' + token}});
   if (res.status === 401 || res.status === 403) { alert('Admin access only.'); window.location.href = '/login.html'; }
@@ -93,10 +155,12 @@ async function loadDashboard() {
   try {
     var results = await Promise.all([apiFetch('/api/admin/users'), apiFetch('/api/admin/activity'), apiFetch('/api/admin/token-usage'), apiFetch('/api/admin/billing')]);
     var users = results[0]; var activity = results[1]; var tokens = results[2]; var billing = results[3];
+    allUsers = users;
+    allActivity = activity;
+    activityDisplayCount = ACTIVITY_PAGE_SIZE;
     var uTbody = document.getElementById('users-tbody');
     uTbody.innerHTML = users.length ? users.map(function(u){return '<tr><td>'+u.name+'</td><td>'+u.logs_today+'</td><td>'+u.logs_total+'</td></tr>';}).join('') : '<tr><td colspan="3" class="empty">No superintendents found</td></tr>';
-    var aTbody = document.getElementById('activity-tbody');
-    aTbody.innerHTML = activity.length ? activity.slice(0,20).map(function(a){console.log('activity name:', a.name);var d=a.description||a.work_completed||'-';var userName=String(a.name||'').replace(/^PM\s*/i,'');return '<tr><td>'+formatTime(a.created_at)+'</td><td>'+userName+'</td><td>'+badge(a.type)+'</td><td class="activity-detail">'+String(d)+'</td></tr>';}).join('') : '<tr><td colspan="4" class="empty">No activity yet</td></tr>';
+    renderActivityRows();
     var tTbody = document.getElementById('tokens-tbody');
     tTbody.innerHTML = tokens.length ? tokens.map(function(t){return '<tr><td>'+t.day+'</td><td>'+t.name+'</td><td>'+t.action+'</td><td>'+t.calls+'</td><td>'+Number(t.total_in).toLocaleString()+'</td></tr>';}).join('') : '<tr><td colspan="5" class="empty">No token data yet</td></tr>';
     var bContainer = document.getElementById('billing-container');
@@ -108,6 +172,32 @@ async function loadDashboard() {
     document.getElementById('loading').innerHTML = '<span style="color:#e74c3c">ERROR: ' + err.message + '</span>';
   }
 }
+document.getElementById('activity-load-more').addEventListener('click', function() {
+  activityDisplayCount += ACTIVITY_PAGE_SIZE;
+  renderActivityRows();
+});
+document.getElementById('export-activity-csv').addEventListener('click', function() {
+  if (!allActivity.length) { alert('No activity to export.'); return; }
+  var rows = allActivity.map(function(a) {
+    return [
+      formatDate(a.created_at),
+      formatTime(a.created_at),
+      cleanUserName(a.name),
+      a.type || '',
+      a.description || a.work_completed || ''
+    ];
+  });
+  downloadCsv('ari-activity-' + new Date().toISOString().slice(0, 10) + '.csv',
+    ['Date', 'Time', 'Superintendent', 'Type', 'Detail'], rows);
+});
+document.getElementById('export-users-csv').addEventListener('click', function() {
+  if (!allUsers.length) { alert('No superintendents to export.'); return; }
+  var rows = allUsers.map(function(u) {
+    return [u.name || '', String(u.logs_today != null ? u.logs_today : ''), String(u.logs_total != null ? u.logs_total : '')];
+  });
+  downloadCsv('ari-superintendents-' + new Date().toISOString().slice(0, 10) + '.csv',
+    ['Name', 'Logs Today', 'Total Logs'], rows);
+});
 loadDashboard();
 </script>
 </body>

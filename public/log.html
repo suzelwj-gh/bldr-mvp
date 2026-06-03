@@ -63,33 +63,63 @@
       padding: 1.5rem 1.25rem 2.5rem;
     }
 
-    .counts {
+    .filter-tabs {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.5rem;
       margin-bottom: 1.5rem;
       flex-wrap: wrap;
     }
 
-    .count-pill {
+    .filter-tab {
       font-size: 0.75rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      padding: 0.5rem 0.75rem;
+      padding: 0.5rem 0.85rem;
       border-radius: 4px;
       border: 1px solid #1e2329;
       background: #111418;
+      color: #9ca3af;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
 
-    .count-pill .num {
+    .filter-tab .num {
       font-family: 'Courier New', Courier, monospace;
-      color: #e8eaed;
       margin-left: 0.35rem;
+      opacity: 0.9;
     }
 
-    .count-issues { border-color: rgba(239,68,68,0.4); color: #f87171; }
-    .count-progress { border-color: rgba(34,197,94,0.4); color: #4ade80; }
-    .count-rfi { border-color: rgba(245,166,35,0.4); color: #fbbf24; }
+    .filter-tab:hover { opacity: 0.9; }
+
+    .filter-tab.active-all {
+      border-color: #e8eaed;
+      color: #e8eaed;
+      background: rgba(232, 234, 237, 0.08);
+    }
+
+    .filter-tab.active-issue {
+      border-color: #ef4444;
+      color: #f87171;
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    .filter-tab.active-progress {
+      border-color: #22c55e;
+      color: #4ade80;
+      background: rgba(34, 197, 94, 0.15);
+    }
+
+    .filter-tab.active-rfi {
+      border-color: #3b82f6;
+      color: #74c0fc;
+      background: rgba(59, 130, 246, 0.15);
+    }
+
+    .filter-tab.tab-issue { color: #f87171; }
+    .filter-tab.tab-progress { color: #4ade80; }
+    .filter-tab.tab-rfi { color: #74c0fc; }
 
     .empty-state {
       text-align: center;
@@ -202,7 +232,7 @@
   </header>
 
   <main>
-    <div id="counts" class="counts" style="display: none;"></div>
+    <div id="filter-tabs" class="filter-tabs" style="display: none;"></div>
     <div id="loading" class="loading">Loading today's notes…</div>
     <div id="error" class="error-banner" style="display: none;"></div>
     <div id="empty" class="empty-state" style="display: none;">No notes recorded today</div>
@@ -215,11 +245,14 @@
       window.location.href = '/login.html';
     }
 
-    const countsEl = document.getElementById('counts');
+    const filterTabsEl = document.getElementById('filter-tabs');
     const loadingEl = document.getElementById('loading');
     const errorEl = document.getElementById('error');
     const emptyEl = document.getElementById('empty');
     const notesListEl = document.getElementById('notes-list');
+
+    let allNotes = [];
+    let activeFilter = 'all';
 
     function esc(str) {
       if (str == null) return '';
@@ -304,16 +337,50 @@
       </div>`;
     }
 
-    function renderCounts(notes) {
-      const issues = notes.filter(n => n.type === 'issue').length;
-      const progress = notes.filter(n => n.type === 'progress').length;
-      const rfis = notes.filter(n => n.type === 'rfi').length;
-      countsEl.innerHTML = `
-        <span class="count-pill count-issues">Issues<span class="num">${issues}</span></span>
-        <span class="count-pill count-progress">Progress<span class="num">${progress}</span></span>
-        <span class="count-pill count-rfi">RFIs<span class="num">${rfis}</span></span>
-      `;
-      countsEl.style.display = 'flex';
+    function getCounts(notes) {
+      return {
+        all: notes.length,
+        issue: notes.filter(n => n.type === 'issue').length,
+        progress: notes.filter(n => n.type === 'progress').length,
+        rfi: notes.filter(n => n.type === 'rfi').length,
+      };
+    }
+
+    function renderFilterTabs(notes) {
+      const c = getCounts(notes);
+      const tabs = [
+        { id: 'all', label: 'All', count: c.all, tabClass: '', activeClass: 'active-all' },
+        { id: 'issue', label: 'Issues', count: c.issue, tabClass: 'tab-issue', activeClass: 'active-issue' },
+        { id: 'progress', label: 'Progress', count: c.progress, tabClass: 'tab-progress', activeClass: 'active-progress' },
+        { id: 'rfi', label: 'RFIs', count: c.rfi, tabClass: 'tab-rfi', activeClass: 'active-rfi' },
+      ];
+      filterTabsEl.innerHTML = tabs.map(t => {
+        const isActive = activeFilter === t.id;
+        const active = isActive ? ` ${t.activeClass}` : '';
+        return `<button type="button" class="filter-tab ${t.tabClass}${active}" data-filter="${t.id}">${t.label}<span class="num">${t.count}</span></button>`;
+      }).join('');
+      filterTabsEl.style.display = 'flex';
+      filterTabsEl.querySelectorAll('.filter-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeFilter = btn.getAttribute('data-filter');
+          renderFilterTabs(allNotes);
+          renderNotesList();
+        });
+      });
+    }
+
+    function getFilteredNotes() {
+      if (activeFilter === 'all') return allNotes;
+      return allNotes.filter(n => n.type === activeFilter);
+    }
+
+    function renderNotesList() {
+      const filtered = getFilteredNotes();
+      if (filtered.length === 0) {
+        notesListEl.innerHTML = `<p class="empty-state">${activeFilter === 'all' ? 'No notes recorded today' : 'No ' + activeFilter + ' notes today'}</p>`;
+        return;
+      }
+      notesListEl.innerHTML = filtered.map(renderNoteCard).join('');
     }
 
     async function loadNotes() {
@@ -334,8 +401,10 @@
           return;
         }
 
-        renderCounts(notes);
-        notesListEl.innerHTML = notes.map(renderNoteCard).join('');
+        allNotes = notes;
+        activeFilter = 'all';
+        renderFilterTabs(allNotes);
+        renderNotesList();
       } catch (err) {
         loadingEl.style.display = 'none';
         errorEl.textContent = err.message || 'Could not load notes';
