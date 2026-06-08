@@ -370,6 +370,7 @@
 
     const micBtn = document.getElementById('mic-btn');
     const micRing = document.getElementById('mic-ring');
+    const micLabel = document.querySelector('.mic-label');
     const statusEl = document.getElementById('status');
     const transcriptText = document.getElementById('transcript-text');
     const errorBanner = document.getElementById('error-banner');
@@ -421,6 +422,7 @@
       rerecordBtn.style.display = '';
       actionCardRoot.innerHTML = '';
       setStatus('Ready');
+      if (micLabel) micLabel.textContent = 'Tap to Record';
       showPanel('record');
     }
 
@@ -463,7 +465,7 @@
 
       if (data.type === 'issue') {
         cardClass += ' action-card-issue';
-        title = '⚠ ISSUE LOGGED';
+        title = 'ISSUE LOGGED';
         badge = badgeHtml(data.priority);
         fields = [
           fieldHtml('Date', data.date),
@@ -475,7 +477,7 @@
         ].join('');
       } else if (data.type === 'progress') {
         cardClass += ' action-card-progress';
-        title = '✓ PROGRESS LOGGED';
+        title = 'PROGRESS LOGGED';
         fields = [
           fieldHtml('Date', data.date),
           fieldHtml('Area', data.area),
@@ -486,7 +488,7 @@
         ].join('');
       } else if (data.type === 'rfi') {
         cardClass += ' action-card-rfi';
-        title = '? RFI PREPARED';
+        title = 'RFI PREPARED';
         badge = badgeHtml(data.urgency);
         fields = [
           fieldHtml('Date', data.date),
@@ -502,8 +504,13 @@
         return;
       }
 
+      const priorityLevel = data.type === 'rfi' ? data.urgency : data.priority;
+      const borderStyle = priorityLevel && String(priorityLevel).toUpperCase() === 'HIGH'
+        ? ' style="border-left-color: #ef4444"'
+        : '';
+
       actionCardRoot.innerHTML = `
-        <div class="${cardClass}">
+        <div class="${cardClass}"${borderStyle}>
           <div class="action-card-top">
             <h2 class="action-title">${title}</h2>
             ${badge}
@@ -542,12 +549,14 @@
           isRecording = false;
           micBtn.classList.remove('recording');
           micRing.classList.remove('pulse');
+          if (micLabel) micLabel.textContent = 'Tap to Record';
         };
         // Timeslice ensures chunks flush during long recordings (not only at stop)
         mediaRecorder.start(RECORDER_TIMESLICE_MS);
         isRecording = true;
         micBtn.classList.add('recording');
         micRing.classList.add('pulse');
+        if (micLabel) micLabel.textContent = 'Recording... tap to stop';
         setStatus('Recording... (tap to stop)', 'recording');
       } catch {
         setStatus('Microphone access denied', 'error');
@@ -559,6 +568,7 @@
       isRecording = false;
       micBtn.classList.remove('recording');
       micRing.classList.remove('pulse');
+      if (micLabel) micLabel.textContent = 'Tap to Record';
       setStatus('Processing...', 'working');
 
       const recorder = mediaRecorder;

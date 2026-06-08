@@ -325,7 +325,12 @@
         fields = fieldHtml('Details', JSON.stringify(s, null, 2));
       }
 
-      return `<div class="${cardClass}">
+      const priorityLevel = note.type === 'rfi' ? s.urgency : s.priority;
+      const borderStyle = priorityLevel && String(priorityLevel).toUpperCase() === 'HIGH'
+        ? ' style="border-left-color: #ef4444"'
+        : '';
+
+      return `<div class="${cardClass}"${borderStyle}>
         <div class="action-card-top">
           <div>
             <h2 class="action-title">${title}</h2>
