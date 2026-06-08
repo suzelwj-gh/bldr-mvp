@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  const normalizedEmail = email.toLowerCase().trim();
 
   if (!email || !password) {
     return res.status(401).json({ message: 'Invalid credentials' });
@@ -15,7 +16,7 @@ router.post('/login', async (req, res) => {
   try {
     const result = await pool.query(
       'SELECT id, email, password_hash, role, name, project FROM users WHERE email = $1',
-      [email]
+      [normalizedEmail]
     );
 
     if (result.rows.length === 0) {
